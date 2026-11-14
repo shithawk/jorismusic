@@ -31,6 +31,7 @@ let pendingYtPlay = false;
 let pendingYtVideo = "";
 let scWidget = null;
 let noticeTimer = 0;
+let noticeActionURL = "";
 let ignoreAdvance = false;
 let seekHold = false;
 let seekBar = null;
@@ -87,6 +88,11 @@ async function init() {
 }
 
 function bindEvents() {
+  document.getElementById("notice-action").addEventListener("click", () => {
+    if (!noticeActionURL) return;
+    window.open(noticeActionURL, "_blank", "noopener,noreferrer");
+    clearNotice();
+  });
   document.getElementById("home").addEventListener("click", goHome);
   document.getElementById("artists").addEventListener("click", () => openArtists());
   document.getElementById("songs-nav").addEventListener("click", showSongs);
@@ -302,9 +308,11 @@ function renderSongs() {
   document.getElementById("now-stack").hidden = !current;
   document.body.classList.toggle("has-now", Boolean(current));
   const label = current ? nowLabel(current) : "";
-  document.getElementById("now-bar-title").textContent = label ? "Now Playing: " + label : "";
+  document.getElementById("now-bar-status").textContent = state.playing ? "Now playing" : "Paused";
+  document.getElementById("now-bar-title").textContent = label ? "— " + label : "";
   const bar = document.getElementById("now-bar");
   bar.setAttribute("aria-label", label ? (state.playing ? "Now playing: " : "Paused: ") + label : "Now playing");
+  document.getElementById("now-stack").classList.toggle("is-playing", Boolean(current && state.playing));
   if (current) refreshSeek();
 }
 
@@ -978,12 +986,70 @@ function setPlaying(playing) {
   if (!document.getElementById("videos-sheet").hidden) renderVideos();
 }
 
-function setNotice(text) {
-  const el = document.getElementById("notice");
-  el.textContent = text;
-  el.hidden = !text;
+function clearNotice() {
   clearTimeout(noticeTimer);
-  if (text) noticeTimer = setTimeout(() => { el.hidden = true; }, 4000);
+  noticeTimer = 0;
+  noticeActionURL = "";
+  const el = document.getElementById("notice");
+  const action = document.getElementById("notice-action");
+  document.getElementById("notice-text").textContent = "";
+  action.hidden = true;
+  el.hidden = true;
+}
+
+function setNotice(text, options = {}) {
+  const el = document.getElementById("notice");
+  const textEl = document.getElementById("notice-text");
+  const action = document.getElementById("notice-action");
+  if (!text) {
+    clearNotice();
+    return;
+  }
+  textEl.textContent = text;
+  const duration = options.duration || 4000;
+  const url = options.url || "";
+  if (url && options.actionLabel) {
+    noticeActionURL = url;
+    action.textContent = options.actionLabel;
+    action.hidden = false;
+  } else {
+    noticeActionURL = "";
+    action.hidden = true;
+  }
+  el.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(clearNotice, duration);
+}
+
+function youtubeWatchURL(videoId) {
+  return videoId ? "https://www.youtube.com/watch?v=" + encodeURIComponent(videoId) : "";
+}
+
+function youtubePlaybackErrorMessage(code) {
+  switch (code) {
+    case 2:
+      return "YouTube could not load this video (bad request).";
+    case 5:
+      return "YouTube could not play this video in the browser.";
+    case 100:
+      return "This video is private, removed, or not available in your region.";
+    case 101:
+    case 150:
+      return "This uploader does not allow playback inside the app. Try another upload of the same song, add an MP3 from the Mac, or open it in YouTube.";
+    default:
+      return "This YouTube video could not be played in the app. Try another upload or add an MP3 from the Mac.";
+  }
+}
+
+function noticeYouTubePlaybackError(code) {
+  const track = currentTrack();
+  const url = track && track.source === "youtube" ? youtubeWatchURL(track.mediaRef) : "";
+  setPlaying(false);
+  setNotice(youtubePlaybackErrorMessage(code), {
+    duration: 14000,
+    actionLabel: url ? "Open in YouTube" : "",
+    url
+  });
 }
 
 function showSongs() {
@@ -1937,7 +2003,16 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
     width: "100%",
     height: "100%",
     videoId: pendingVideo || undefined,
-    playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 1, fs: 1, iv_load_policy: 3 },
+    playerVars: {
+      autoplay: 1,
+      playsinline: 1,
+      rel: 0,
+      modestbranding: 1,
+      controls: 1,
+      fs: 1,
+      iv_load_policy: 3,
+      origin: window.location.origin
+    },
     events: {
       onReady: () => {
         ytReady = true;
@@ -1970,9 +2045,9 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
         if (event.data === YT.PlayerState.PAUSED) setPlaying(false);
         if (event.data === YT.PlayerState.ENDED && youtubeActuallyEnded(event)) step(1);
       },
-      onError: () => {
+      onError: (event) => {
         finishTrackChange();
-        setNotice("That video could not be played.");
+        noticeYouTubePlaybackError(event && event.data);
       }
     }
   });

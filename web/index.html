@@ -12,7 +12,7 @@
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icon-180.png">
-  <link rel="stylesheet" href="/styles.css?v=59">
+  <link rel="stylesheet" href="/styles.css?v=62">
 </head>
 <body>
   <div class="top-nav">
@@ -71,14 +71,21 @@
   </div>
 
   <div id="now-stack" class="now-stack" hidden>
-    <button id="now-bar" class="big prominent now-bar" type="button">
-      <strong id="now-bar-title"></strong>
-    </button>
-    <div id="seek" class="seek dock-seek" role="slider" tabindex="0" aria-label="Skip in this song" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <div class="seek-fill"></div>
-      <span class="seek-thumb" id="seek-thumb"></span>
-      <span class="seek-time start seek-elapsed" id="seek-elapsed">0:00</span>
-      <span class="seek-time end seek-total" id="seek-total">0:00</span>
+    <div class="now-dock" role="region" aria-label="Now playing">
+      <div class="now-stripe" aria-hidden="true"><span class="yellow"></span><span class="red"></span></div>
+      <button id="now-bar" class="now-bar" type="button">
+        <span class="now-live" id="now-live" aria-hidden="true"></span>
+        <span class="now-bar-line">
+          <span id="now-bar-status" class="now-bar-status">Now playing</span>
+          <strong id="now-bar-title"></strong>
+        </span>
+      </button>
+      <div id="seek" class="seek dock-seek" role="slider" tabindex="0" aria-label="Skip in this song" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="seek-fill"></div>
+        <span class="seek-thumb" id="seek-thumb"></span>
+        <span class="seek-time start seek-elapsed" id="seek-elapsed">0:00</span>
+        <span class="seek-time end seek-total" id="seek-total">0:00</span>
+      </div>
     </div>
   </div>
 
@@ -208,8 +215,11 @@
     </button>
   </div>
 
-  <div id="notice" class="notice" hidden role="status"></div>
+  <div id="notice" class="notice" hidden role="status">
+    <p id="notice-text"></p>
+    <button id="notice-action" class="notice-action" type="button" hidden>Open in YouTube</button>
+  </div>
   <audio id="audio" playsinline preload="none"></audio>
-  <script src="/app.js?v=51" defer></script>
+  <script src="/app.js?v=52" defer></script>
 </body>
 </html>
