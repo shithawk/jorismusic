@@ -366,7 +366,7 @@ function refreshPlayFavouritesButton() {
   const count = favoriteTracks().length;
   button.disabled = count === 0;
   if (count === 0) {
-    button.textContent = "Play favourites";
+    button.textContent = "Select heart to add song to favourites";
   } else if (count === 1) {
     button.textContent = "♥ Play favourite";
   } else {
@@ -405,7 +405,7 @@ async function toggleFavorite(id) {
 function playFavourites() {
   const tracks = favoriteTracks();
   if (!tracks.length) {
-    setNotice("Tap the heart while a song plays to add a favourite.");
+    setNotice("Select heart to add song to favourites.");
     return;
   }
   let ids = tracks.map((track) => track.id);
