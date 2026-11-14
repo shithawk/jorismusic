@@ -243,11 +243,18 @@ function bindEvents() {
   });
   document.getElementById("confirm-keep").addEventListener("click", hideConfirm);
   document.getElementById("confirm-remove").addEventListener("click", confirmRemove);
+  document.getElementById("now-favorite").addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const track = currentTrack();
+    if (track) toggleFavorite(track.id);
+  });
   document.getElementById("now-bar").addEventListener("click", () => {
     const track = currentTrack();
     if (track && track.source !== "local") openPlayer();
     else showSongList();
   });
+  document.getElementById("play-favourites").addEventListener("click", playFavourites);
   document.getElementById("previous").addEventListener("click", () => skip(-1));
   document.getElementById("next").addEventListener("click", () => skip(1));
   document.getElementById("play-button").addEventListener("click", () => {
@@ -313,7 +320,71 @@ function renderSongs() {
   const bar = document.getElementById("now-bar");
   bar.setAttribute("aria-label", label ? (state.playing ? "Now playing: " : "Paused: ") + label : "Now playing");
   document.getElementById("now-stack").classList.toggle("is-playing", Boolean(current && state.playing));
+  updateNowFavoriteButton();
+  refreshPlayFavouritesButton();
   if (current) refreshSeek();
+}
+
+function trackIsFavorite(track) {
+  return Boolean(track && track.favorite);
+}
+
+function favoriteTracks() {
+  return state.tracks.filter(trackIsFavorite);
+}
+
+function refreshPlayFavouritesButton() {
+  const button = document.getElementById("play-favourites");
+  const count = favoriteTracks().length;
+  button.disabled = count === 0;
+  if (count === 0) {
+    button.textContent = "Play favourites";
+  } else if (count === 1) {
+    button.textContent = "♥ Play favourite";
+  } else {
+    button.textContent = "♥ Play favourites (" + count + ")";
+  }
+}
+
+function updateNowFavoriteButton() {
+  const button = document.getElementById("now-favorite");
+  const track = currentTrack();
+  if (!track) {
+    button.hidden = true;
+    return;
+  }
+  button.hidden = false;
+  const on = trackIsFavorite(track);
+  button.classList.toggle("is-on", on);
+  button.setAttribute("aria-pressed", on ? "true" : "false");
+  button.setAttribute("aria-label", on ? "Remove from favourites" : "Add to favourites");
+}
+
+async function toggleFavorite(id) {
+  const track = state.tracks.find((item) => item.id === id);
+  if (!track) return;
+  track.favorite = !trackIsFavorite(track);
+  try {
+    await putTrack(track);
+  } catch {
+    setNotice("Could not save favourite.");
+    track.favorite = !track.favorite;
+    return;
+  }
+  updateNowFavoriteButton();
+  refreshPlayFavouritesButton();
+}
+
+function playFavourites() {
+  const tracks = favoriteTracks();
+  if (!tracks.length) {
+    setNotice("Tap the heart while a song plays to add a favourite.");
+    return;
+  }
+  let ids = tracks.map((track) => track.id);
+  if (state.shuffle) ids = shuffleIds(ids);
+  state.artistQueue = { name: "Favourites", ids, index: 0 };
+  playListed(ids[0], { keepQueue: true });
 }
 
 function renderPlayer() {
@@ -1129,7 +1200,7 @@ function renderCatalog() {
   } else if (savedCount === 0) {
     status.textContent = "Tap Download to put a song on this iPad.";
   } else {
-    status.textContent = "Yellow songs are on this iPad. Tap Play.";
+    status.textContent = "Songs on this iPad are ready. Tap Play.";
   }
   for (const entry of state.catalog) {
     const already = savedOnIpad(entry);
@@ -1205,7 +1276,11 @@ async function downloadAll() {
   }
   render();
   renderCatalog();
-  if (count > 0) setNotice(count === 1 ? "1 song is yellow. Tap Play." : count + " songs are yellow. Tap Play.");
+  if (count > 0) {
+    setNotice(
+      count === 1 ? "1 song is ready on this iPad. Tap Play." : count + " songs are ready on this iPad. Tap Play."
+    );
+  }
 }
 
 async function downloadEntry(entry, announce) {
@@ -1255,7 +1330,7 @@ async function downloadEntry(entry, announce) {
     render();
     renderCatalog();
   }
-  if (saved && announce) setNotice(savedTitle + " is yellow. Tap Play.");
+  if (saved && announce) setNotice(savedTitle + " is ready on this iPad. Tap Play.");
   return saved;
 }
 
