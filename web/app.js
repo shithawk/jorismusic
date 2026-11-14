@@ -121,7 +121,14 @@ function bindEvents() {
     addYouTubeVideo(add.dataset.addVideo, add);
   });
   document.getElementById("video-list").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-play]");
+    const fav = event.target.closest("[data-favorite]");
+    if (fav) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleFavorite(fav.dataset.favorite);
+      return;
+    }
+    const button = event.target.closest(".song-play[data-play]");
     if (button) playListed(button.dataset.play);
   });
   document.getElementById("nav-search").addEventListener("submit", (event) => {
@@ -162,12 +169,19 @@ function bindEvents() {
     showSearch();
   });
   document.getElementById("search-results").addEventListener("click", (event) => {
+    const fav = event.target.closest("[data-favorite]");
+    if (fav) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleFavorite(fav.dataset.favorite);
+      return;
+    }
     const playAll = event.target.closest("[data-play-all]");
     if (playAll) {
       playAllArtist(playAll.dataset.playAll);
       return;
     }
-    const song = event.target.closest("[data-play]");
+    const song = event.target.closest(".song-play[data-play]");
     if (song) {
       playListed(song.dataset.play);
       return;
@@ -185,7 +199,14 @@ function bindEvents() {
       playAllArtist(playAll.dataset.playAll);
       return;
     }
-    const button = event.target.closest("[data-play]");
+    const fav = event.target.closest("[data-favorite]");
+    if (fav) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleFavorite(fav.dataset.favorite);
+      return;
+    }
+    const button = event.target.closest(".song-play[data-play]");
     if (button) {
       playListed(button.dataset.play);
       return;
@@ -218,7 +239,14 @@ function bindEvents() {
     document.getElementById("add-link").disabled = !document.getElementById("link-input").value.trim();
   });
   document.getElementById("song-list").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-play]");
+    const fav = event.target.closest("[data-favorite]");
+    if (fav) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleFavorite(fav.dataset.favorite);
+      return;
+    }
+    const button = event.target.closest(".song-play[data-play]");
     if (!button) return;
     playListed(button.dataset.play);
   });
@@ -371,8 +399,7 @@ async function toggleFavorite(id) {
     track.favorite = !track.favorite;
     return;
   }
-  updateNowFavoriteButton();
-  refreshPlayFavouritesButton();
+  render();
 }
 
 function playFavourites() {
@@ -569,7 +596,6 @@ function songBox(track) {
   const currentSong = track.id === state.currentId;
   const row = document.createElement("div");
   row.className = "song" + (currentSong ? " current" : "");
-  row.dataset.play = track.id;
   const copy = document.createElement("div");
   copy.className = "song-copy";
   const title = document.createElement("span");
@@ -585,8 +611,57 @@ function songBox(track) {
   play.dataset.play = track.id;
   play.setAttribute("aria-label", "Play " + track.title);
   play.append(playIcon());
-  row.append(copy, play);
+  row.append(copy, favoriteHeartButton(track), play);
   return row;
+}
+
+function favoriteHeartButton(track) {
+  const on = trackIsFavorite(track);
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "song-favorite" + (on ? " is-on" : "");
+  button.dataset.favorite = track.id;
+  button.setAttribute("aria-pressed", on ? "true" : "false");
+  button.setAttribute(
+    "aria-label",
+    on ? "Remove " + track.title + " from favourites" : "Add " + track.title + " to favourites"
+  );
+  button.append(heartIcons());
+  return button;
+}
+
+function heartIcons() {
+  const wrap = document.createDocumentFragment();
+  const outline = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  outline.setAttribute("class", "heart-outline");
+  outline.setAttribute("viewBox", "0 0 36 36");
+  outline.setAttribute("width", "26");
+  outline.setAttribute("height", "26");
+  outline.setAttribute("aria-hidden", "true");
+  const outlinePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  outlinePath.setAttribute("fill", "none");
+  outlinePath.setAttribute("stroke", "currentColor");
+  outlinePath.setAttribute("stroke-width", "3");
+  outlinePath.setAttribute(
+    "d",
+    "M18 31 C10 24 4 19 4 13 C4 8 8 4 13 4 C15.5 4 17.5 5.5 18 7.5 C18.5 5.5 20.5 4 23 4 C28 4 32 8 32 13 C32 19 26 24 18 31 Z"
+  );
+  outline.append(outlinePath);
+  const solid = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  solid.setAttribute("class", "heart-solid");
+  solid.setAttribute("viewBox", "0 0 36 36");
+  solid.setAttribute("width", "26");
+  solid.setAttribute("height", "26");
+  solid.setAttribute("aria-hidden", "true");
+  const solidPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  solidPath.setAttribute("fill", "currentColor");
+  solidPath.setAttribute(
+    "d",
+    "M18 31 C10 24 4 19 4 13 C4 8 8 4 13 4 C15.5 4 17.5 5.5 18 7.5 C18.5 5.5 20.5 4 23 4 C28 4 32 8 32 13 C32 19 26 24 18 31 Z"
+  );
+  solid.append(solidPath);
+  wrap.append(outline, solid);
+  return wrap;
 }
 
 function playIcon() {
