@@ -173,12 +173,6 @@ body.search-page #search-page { padding-top: 16px; }
 #search-results .song,
 #search-results .artist-row { margin-top: 0; }
 
-.artist-row.search-artist {
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-}
-
 .home {
   position: relative;
   display: flex;
@@ -807,7 +801,19 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 
 .sheet h1 { font-size: 2.1rem; font-weight: 700; }
 .sheet h2 { font-size: 1.5rem; font-weight: 700; }
-.sheet .youtube-heading { margin-top: 18px; font-size: 1.7rem; }
+.sheet .youtube-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  font-size: 1.7rem;
+}
+.sheet .youtube-heading img {
+  height: 40px;
+  width: auto;
+  display: block;
+}
 .sheet .on-ipad { margin-top: 28px; }
 
 .catalog-row,

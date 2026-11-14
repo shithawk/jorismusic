@@ -117,17 +117,40 @@ function bindEvents() {
     showSearch();
   });
   document.getElementById("search-clear").addEventListener("click", clearSearch);
-  document.getElementById("nav-search-input").addEventListener("input", () => {
-    const value = document.getElementById("nav-search-input").value.trim();
-    if (!value && !document.body.classList.contains("search-page")) return;
+  const navSearchInput = document.getElementById("nav-search-input");
+  let navSearchSeen = navSearchInput.value;
+  let navSearchWatch = 0;
+  const syncNavSearch = () => {
+    const value = navSearchInput.value;
+    if (value === navSearchSeen) return;
+    navSearchSeen = value;
+    if (!value.trim() && !document.body.classList.contains("search-page")) return;
     showSearch({ typing: true });
+  };
+  navSearchInput.addEventListener("input", syncNavSearch);
+  navSearchInput.addEventListener("keyup", syncNavSearch);
+  navSearchInput.addEventListener("search", syncNavSearch);
+  navSearchInput.addEventListener("focus", () => {
+    navSearchSeen = navSearchInput.value;
+    window.clearTimeout(navSearchWatch);
+    const watch = () => {
+      syncNavSearch();
+      if (document.activeElement === navSearchInput) navSearchWatch = window.setTimeout(watch, 150);
+    };
+    navSearchWatch = window.setTimeout(watch, 150);
   });
+  navSearchInput.addEventListener("blur", () => window.clearTimeout(navSearchWatch));
   document.getElementById("nav-search-input").addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     event.preventDefault();
     showSearch();
   });
   document.getElementById("search-results").addEventListener("click", (event) => {
+    const playAll = event.target.closest("[data-play-all]");
+    if (playAll) {
+      playAllArtist(playAll.dataset.playAll);
+      return;
+    }
     const song = event.target.closest("[data-play]");
     if (song) {
       playListed(song.dataset.play);
@@ -167,7 +190,6 @@ function bindEvents() {
   document.addEventListener("pointercancel", finishSeek);
   document.getElementById("add-music").addEventListener("click", openAdd);
   document.getElementById("manage-songs").addEventListener("click", openManage);
-  document.getElementById("close-manage").addEventListener("click", () => hideSheet("manage-sheet"));
   document.getElementById("download-all").addEventListener("click", downloadAll);
   document.getElementById("from-ipad").addEventListener("click", () => document.getElementById("file-input").click());
   document.getElementById("file-input").addEventListener("change", (event) => importFiles(event.target.files));
@@ -546,11 +568,16 @@ function clearSearch() {
   input.focus();
 }
 
+function searchPageIsShowing() {
+  if (!document.body.classList.contains("search-page") || playerIsOpen()) return false;
+  return ["add-sheet", "manage-sheet", "artists-sheet", "videos-sheet"].every((id) => document.getElementById(id).hidden);
+}
+
 function showSearch(options) {
   const typing = Boolean(options && options.typing);
   const input = document.getElementById("nav-search-input");
   state.searchQuery = input.value.trim();
-  const already = document.body.classList.contains("search-page");
+  const already = searchPageIsShowing();
   if (!already) {
     hideSheet("add-sheet");
     hideSheet("manage-sheet");
@@ -602,11 +629,13 @@ function renderSearchResults() {
   for (const name of artists) {
     const open = state.openSearchArtists.has(name);
     const tracks = tracksForArtist(name);
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "artist-row search-artist" + (open ? " open" : "");
-    button.dataset.artistSearch = name;
-    button.setAttribute("aria-expanded", open ? "true" : "false");
+    const row = document.createElement("div");
+    row.className = "artist-row search-artist" + (open ? " open" : "");
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "artist-toggle";
+    toggle.dataset.artistSearch = name;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
     const title = document.createElement("span");
     title.className = "song-title";
     title.textContent = name;
@@ -614,8 +643,14 @@ function renderSearchResults() {
     sub.className = "song-sub";
     const count = tracks.length === 1 ? "1 song" : tracks.length + " songs";
     sub.textContent = count + (open ? " · Tap to hide" : " · Tap to show");
-    button.append(title, sub);
-    list.append(button);
+    toggle.append(title, sub);
+    const playAll = document.createElement("button");
+    playAll.type = "button";
+    playAll.className = "play-all";
+    playAll.dataset.playAll = name;
+    playAll.textContent = "Play all " + name + " songs";
+    row.append(toggle, playAll);
+    list.append(row);
     if (!open) continue;
     const songs = document.createElement("div");
     songs.className = "artist-songs";
@@ -798,7 +833,7 @@ function youtubeSearchResults(payload) {
       title: named.title,
       artist: named.artist
     });
-    if (found.length >= 10) break;
+    if (found.length >= 20) break;
   }
   return found;
 }
