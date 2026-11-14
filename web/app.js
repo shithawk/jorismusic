@@ -27,6 +27,8 @@ const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAE
 let ytPlayer = null;
 let ytReady = false;
 let pendingVideo = "";
+let pendingYtPlay = false;
+let pendingYtVideo = "";
 let scWidget = null;
 let noticeTimer = 0;
 let ignoreAdvance = false;
@@ -98,6 +100,10 @@ function bindEvents() {
     event.preventDefault();
     searchYouTube();
   });
+  document.getElementById("youtube-search-icon").addEventListener("click", (event) => {
+    event.preventDefault();
+    document.getElementById("youtube-search").focus();
+  });
   document.getElementById("youtube-results").addEventListener("click", (event) => {
     const play = event.target.closest("[data-play]");
     if (play) {
@@ -117,6 +123,10 @@ function bindEvents() {
     showSearch();
   });
   document.getElementById("search-clear").addEventListener("click", clearSearch);
+  document.getElementById("nav-search-icon").addEventListener("click", (event) => {
+    event.preventDefault();
+    focusNavSearch();
+  });
   const navSearchInput = document.getElementById("nav-search-input");
   let navSearchSeen = navSearchInput.value;
   let navSearchWatch = 0;
@@ -190,6 +200,7 @@ function bindEvents() {
   document.addEventListener("pointercancel", finishSeek);
   document.getElementById("add-music").addEventListener("click", openAdd);
   document.getElementById("manage-songs").addEventListener("click", openManage);
+  document.getElementById("close-manage").addEventListener("click", goHome);
   document.getElementById("download-all").addEventListener("click", downloadAll);
   document.getElementById("from-ipad").addEventListener("click", () => document.getElementById("file-input").click());
   document.getElementById("file-input").addEventListener("change", (event) => importFiles(event.target.files));
@@ -565,6 +576,12 @@ function clearSearch() {
   state.searchQuery = "";
   state.openSearchArtists.clear();
   if (document.body.classList.contains("search-page")) renderSearchResults();
+  input.focus();
+}
+
+function focusNavSearch() {
+  const input = document.getElementById("nav-search-input");
+  if (!searchPageIsShowing()) showSearch({ typing: true });
   input.focus();
 }
 
@@ -1836,16 +1853,46 @@ async function playableBlob(track) {
   return playable;
 }
 
+function tryPlayYouTube() {
+  if (!pendingYtPlay || !ytReady || !ytPlayer || !window.YT) return;
+  const track = currentTrack();
+  if (!track || track.source !== "youtube" || track.mediaRef !== pendingYtVideo) return;
+  try {
+    const loadedId = ytPlayer.getVideoData ? ytPlayer.getVideoData().video_id : "";
+    if (loadedId && loadedId !== track.mediaRef) return;
+    const playerState = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+    if (playerState === YT.PlayerState.PLAYING) {
+      pendingYtPlay = false;
+      return;
+    }
+    if (
+      playerState === YT.PlayerState.UNSTARTED ||
+      playerState === YT.PlayerState.CUED ||
+      playerState === YT.PlayerState.PAUSED ||
+      playerState === YT.PlayerState.BUFFERING
+    ) {
+      ytPlayer.playVideo();
+    }
+  } catch { /* The player may not be ready yet. */ }
+}
+
 function playYouTube(track) {
   audio().pause();
   pauseSoundCloud();
   pendingVideo = track.mediaRef;
+  pendingYtVideo = track.mediaRef;
+  pendingYtPlay = true;
   loadYouTubeAPI();
-  if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
+  if (!ytReady || !ytPlayer || !ytPlayer.loadVideoById) return;
+  const run = () => {
+    if (!isSource("youtube")) return;
+    const current = currentTrack();
+    if (!current || current.mediaRef !== track.mediaRef) return;
     fitYouTube();
     ytPlayer.loadVideoById(track.mediaRef);
-    ytPlayer.playVideo();
-  }
+    tryPlayYouTube();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
 }
 
 async function playSoundCloud(track) {
@@ -1890,20 +1937,32 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
     width: "100%",
     height: "100%",
     videoId: pendingVideo || undefined,
-    playerVars: { playsinline: 1, rel: 0, modestbranding: 1, controls: 1, fs: 1, iv_load_policy: 3 },
+    playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 1, fs: 1, iv_load_policy: 3 },
     events: {
       onReady: () => {
         ytReady = true;
         allowYouTubeFullscreen();
         fitYouTube();
         if (pendingVideo && isSource("youtube")) {
+          pendingYtVideo = pendingVideo;
+          pendingYtPlay = true;
           ytPlayer.loadVideoById(pendingVideo);
-          ytPlayer.playVideo();
+          tryPlayYouTube();
         }
       },
       onStateChange: (event) => {
         if (!isSource("youtube") || !window.YT) return;
+        if (
+          pendingYtPlay &&
+          (event.data === YT.PlayerState.UNSTARTED ||
+            event.data === YT.PlayerState.CUED ||
+            event.data === YT.PlayerState.PAUSED ||
+            event.data === YT.PlayerState.BUFFERING)
+        ) {
+          tryPlayYouTube();
+        }
         if (event.data === YT.PlayerState.PLAYING) {
+          pendingYtPlay = false;
           finishTrackChange();
           setPlaying(true);
           applyPendingSeek();
