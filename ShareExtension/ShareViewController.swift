@@ -74,12 +74,12 @@ final class ShareViewController: UIViewController {
             return
         }
         guard let defaults = UserDefaults(suiteName: AppGroup.id) else {
-            show("Open Wayne's Music and paste the link there.")
+            show("Open Jori's Music and paste the link there.")
             return
         }
         defaults.set(text, forKey: AppGroup.pendingURLKey)
         defaults.synchronize()
-        show("Saved. Open Wayne's Music to see it.")
+        show("Saved. Open Jori's Music to see it.")
         openHostApp()
     }
 

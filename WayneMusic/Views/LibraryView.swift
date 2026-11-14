@@ -30,7 +30,7 @@ struct SongsView: View {
                     startPoint: .center,
                     endPoint: .bottom
                 )
-                Text("Wayne's Music")
+                Text("Jori's Music")
                     .font(.largeTitle.weight(.bold))
                     .foregroundColor(.white)
                     .shadow(color: .black, radius: 2, x: 0, y: 2)

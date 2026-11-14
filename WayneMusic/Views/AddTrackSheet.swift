@@ -60,7 +60,7 @@ struct AddTrackSheet: View {
                     .disabled(working || link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
 
-                Text("You can also tap Share in YouTube or SoundCloud, then choose Wayne's Music.")
+                Text("You can also tap Share in YouTube or SoundCloud, then choose Jori's Music.")
                     .font(.title3)
                     .foregroundColor(.white.opacity(0.9))
                     .fixedSize(horizontal: false, vertical: true)

@@ -70,7 +70,7 @@ async function init() {
     state.tracks = sortTracks(await allTracks());
     await fixSavedYouTubeArtists();
   } catch {
-    setNotice("This iPad could not open saved songs. Leave private browsing, then add Wayne's Music to the Home Screen.");
+    setNotice("This iPad could not open saved songs. Leave private browsing, then add Jori's Music to the Home Screen.");
   }
   if (state.shuffle) startShuffle(state.currentId);
   render();
