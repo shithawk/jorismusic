@@ -25,3 +25,12 @@ if [[ -n "$WAYNE" && -f "$WAYNE/Caddyfile" ]]; then
 else
   echo "Note: waynesmusic not found at $ROOT/../waynesmusic — only Jori's URL is set up."
 fi
+
+DNS="$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))' 2>/dev/null || true)"
+if [[ -n "$DNS" ]]; then
+  echo ""
+  echo "Jori's on iPhone (or iPad):"
+  echo "  1. Install Tailscale, sign in to the same account, turn VPN on."
+  echo "  2. Safari → https://${DNS}/"
+  echo "  3. Share → Add to Home Screen (for the Jori's Music icon)."
+fi

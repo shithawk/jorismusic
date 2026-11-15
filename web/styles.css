@@ -286,6 +286,14 @@ body.has-now #songs { bottom: calc(var(--transport-bar) + var(--now-bar-space));
   font-weight: 600;
 }
 
+.hint-card .hint-sub {
+  margin-top: 10px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.72);
+}
+
 .actions {
   display: flex;
   flex-direction: column;
@@ -990,7 +998,7 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
   width: auto;
   display: block;
 }
-.sheet .on-ipad { margin-top: 28px; }
+.sheet .on-device { margin-top: 28px; }
 
 .catalog-row,
 .manage-row {
@@ -1128,3 +1136,29 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 .notice-action:active { opacity: 0.72; }
 
 #audio { display: none; }
+
+@media (max-width: 430px) {
+  .top-nav-row > .home:not(.search-clear) {
+    padding: 8px 10px;
+    font-size: 1.05rem;
+  }
+
+  .nav-search {
+    min-height: 50px;
+  }
+
+  .search-clear {
+    min-width: 72px;
+    font-size: 1.15rem;
+  }
+
+  .hint-card,
+  .actions {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .banner {
+    height: clamp(160px, 42vw, 220px);
+  }
+}

@@ -118,7 +118,7 @@ final class PlaybackController: ObservableObject {
     private func playLocal(_ track: Track) {
         let url = musicFileURL(named: track.mediaRef)
         guard FileManager.default.fileExists(atPath: url.path) else {
-            message = "That song is missing from this iPad."
+            message = "That song is missing from this \(Theme.deviceName)."
             isPlaying = false
             return
         }

@@ -28,6 +28,8 @@
 		96AC0415A2B1368D105F770E /* AddTrackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBE199A8FF0F7FB1078E7A6 /* AddTrackSheet.swift */; };
 		9A8FD6E0662580E277B501B3 /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = C630A820E352D4C1CCD1505E /* Track.swift */; };
 		A7328E1AE0769EAD7F67E78F /* Busch-Clash-Joey-Logano-22.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6C5D50C39461BB49807504FA /* Busch-Clash-Joey-Logano-22.jpg */; };
+		AA25BE048A80DC63D24A3B53 /* youtube-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 392647AA284001F6BCE8E92A /* youtube-logo.png */; };
+		ACB2EA7567E1CD1A90EC4F30 /* go.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9024D9BF1103F835F556F697 /* go.jpg */; };
 		D18363BFA5749FDB0BB0F626 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C2A729F9F4EBF647EF0BFF7 /* RootView.swift */; };
 		D435D1074E7682731C67D29A /* LinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 371B583AEF9C8D7F1227BF18 /* LinkParser.swift */; };
 		D7EA35B2E1848C2513B3D143 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0B340074ADFE4A05CA45E8 /* LibraryView.swift */; };
@@ -73,6 +75,7 @@
 		1BBA9B5915DA3FB6392B6ABD /* WayneMusic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WayneMusic.entitlements; sourceTree = "<group>"; };
 		2A3A1773BB8B5156DFA1FD00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		371B583AEF9C8D7F1227BF18 /* LinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkParser.swift; sourceTree = "<group>"; };
+		392647AA284001F6BCE8E92A /* youtube-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "youtube-logo.png"; sourceTree = "<group>"; };
 		3EBE199A8FF0F7FB1078E7A6 /* AddTrackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTrackSheet.swift; sourceTree = "<group>"; };
 		552E7CCEE7379C2C341232CF /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
 		5D2980D60581107A75B0F930 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -84,6 +87,7 @@
 		7D0B340074ADFE4A05CA45E8 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		882DC3ED03071EFB4611E7F2 /* Contrapunctus1.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Contrapunctus1.mp3; sourceTree = "<group>"; };
 		88B310AD9AE50DCDBDEAF8AF /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		9024D9BF1103F835F556F697 /* go.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = go.jpg; sourceTree = "<group>"; };
 		A2E686DE54DF848F62B03438 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A340EC6FFE981F7B41A1F0E9 /* PreludeInCMajor.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = PreludeInCMajor.mp3; sourceTree = "<group>"; };
 		AC446558EEBC1FF6BEA18C6F /* WayneMusicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WayneMusicApp.swift; sourceTree = "<group>"; };
@@ -113,6 +117,8 @@
 			children = (
 				6C5D50C39461BB49807504FA /* Busch-Clash-Joey-Logano-22.jpg */,
 				7839FCE6A6E966DDBAE7FCCA /* Gemini_Generated_Image_68y12568y12568y1.jpeg */,
+				9024D9BF1103F835F556F697 /* go.jpg */,
+				392647AA284001F6BCE8E92A /* youtube-logo.png */,
 			);
 			path = images;
 			sourceTree = "<group>";
@@ -338,6 +344,8 @@
 				056B56FFC3770FB785676D83 /* Contrapunctus1.mp3 in Resources */,
 				4B835EEFB80827A754C04DD1 /* Gemini_Generated_Image_68y12568y12568y1.jpeg in Resources */,
 				51AD15DBD400F2B18070711C /* PreludeInCMajor.mp3 in Resources */,
+				ACB2EA7567E1CD1A90EC4F30 /* go.jpg in Resources */,
+				AA25BE048A80DC63D24A3B53 /* youtube-logo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,7 +486,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -500,7 +508,7 @@
 				PRODUCT_NAME = ShareExtension;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -522,7 +530,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.shithawk.waynemusic;
 				PRODUCT_NAME = WayneMusic;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -596,7 +604,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -618,7 +626,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.shithawk.waynemusic;
 				PRODUCT_NAME = WayneMusic;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -640,7 +648,7 @@
 				PRODUCT_NAME = ShareExtension;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};

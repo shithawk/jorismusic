@@ -7,7 +7,18 @@ enum Theme {
     static let yellow = Color(red: 1.0, green: 0.82, blue: 0.0)
     static let red = Color(red: 0.86, green: 0.08, blue: 0.1)
     static let carImageName = "Gemini_Generated_Image_68y12568y12568y1"
-    static let mirrorHint = "To listen to this on the TV, swipe down from the top-right corner of the iPad, tap Screen Mirroring, then choose the TV."
+    static var mirrorHint: String {
+        switch UIDevice.current.userInterfaceIdiom {
+        case .phone:
+            return "To play on a TV or speaker, open Control Center, tap AirPlay, then choose the device."
+        default:
+            return "To listen on the TV, swipe down from the top-right corner of the iPad, tap Screen Mirroring, then choose the TV."
+        }
+    }
+
+    static var deviceName: String {
+        UIDevice.current.userInterfaceIdiom == .phone ? "iPhone" : "iPad"
+    }
 }
 
 struct CarPhoto: View {

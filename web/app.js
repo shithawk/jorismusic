@@ -24,6 +24,54 @@ let dbPromise = null;
 const fileBlobs = new Map();
 const fileURLs = new Map();
 const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+
+function deviceKind() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPod/.test(ua)) return "iphone";
+  if (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ipad";
+  return "other";
+}
+
+function deviceLabel() {
+  const k = deviceKind();
+  if (k === "iphone") return "iPhone";
+  if (k === "ipad") return "iPad";
+  return "device";
+}
+
+function onThisDevice() {
+  const k = deviceKind();
+  if (k === "other") return "on this device";
+  return "on this " + deviceLabel();
+}
+
+function applyDeviceCopy() {
+  const on = onThisDevice();
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  set(
+    "install-hint-text",
+    deviceKind() === "iphone"
+      ? "Install Jori's Music: in Safari, tap Share at the bottom of the screen, then Add to Home Screen."
+      : "Install Jori's Music: tap Share, then Add to Home Screen."
+  );
+  set("empty", "Tap + Add music to put songs " + on + ".");
+  set(
+    "mirror-hint",
+    deviceKind() === "iphone"
+      ? "To play on a TV or speaker, open Control Center, tap AirPlay, then choose the device."
+      : "To listen on the TV, swipe down from the top-right corner of the iPad, tap Screen Mirroring, then choose the TV."
+  );
+  set("from-ipad", "Choose a song saved " + on);
+  set("manage-lede", "This takes a song off this " + deviceLabel() + ".");
+  set("artists-empty", "No songs " + on + " yet.");
+  set("videos-local-heading", onThisDevice().replace(/^on /, "On "));
+  set("videos-empty", "No videos " + on + " yet.");
+  const hintSub = document.querySelector("#install-hint .hint-sub");
+  if (hintSub) hintSub.hidden = deviceKind() !== "iphone";
+}
 let ytPlayer = null;
 let ytReady = false;
 let pendingVideo = "";
@@ -46,6 +94,7 @@ const audio = () => document.getElementById("audio");
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
+  applyDeviceCopy();
   document.getElementById("install-hint").hidden = standalone();
   state.shuffle = loadShuffle();
   bindEvents();
@@ -71,7 +120,11 @@ async function init() {
     state.tracks = sortTracks(await allTracks());
     await fixSavedYouTubeArtists();
   } catch {
-    setNotice("This iPad could not open saved songs. Leave private browsing, then add Jori's Music to the Home Screen.");
+    setNotice(
+      "This " +
+        deviceLabel() +
+        " could not open saved songs. Leave private browsing, then add Jori's Music to the Home Screen."
+    );
   }
   if (state.shuffle) startShuffle(state.currentId);
   render();
@@ -1257,7 +1310,7 @@ async function loadCatalog() {
     state.macError = "";
   } catch {
     state.catalog = [];
-    state.macError = "The computer is off or asleep. Songs already on this iPad still play.";
+    state.macError = "The computer is off or asleep. Songs already on this " + deviceLabel() + " still play.";
   }
 }
 
@@ -1273,9 +1326,9 @@ function renderCatalog() {
   } else if (state.catalog.length === 0) {
     status.textContent = "No songs on the computer yet.";
   } else if (savedCount === 0) {
-    status.textContent = "Tap Download to put a song on this iPad.";
+    status.textContent = "Tap Download to put a song " + onThisDevice() + ".";
   } else {
-    status.textContent = "Songs on this iPad are ready. Tap Play.";
+    status.textContent = "Songs " + onThisDevice() + " are ready. Tap Play.";
   }
   for (const entry of state.catalog) {
     const already = savedOnIpad(entry);
@@ -1353,7 +1406,9 @@ async function downloadAll() {
   renderCatalog();
   if (count > 0) {
     setNotice(
-      count === 1 ? "1 song is ready on this iPad. Tap Play." : count + " songs are ready on this iPad. Tap Play."
+      count === 1
+        ? "1 song is ready " + onThisDevice() + ". Tap Play."
+        : count + " songs are ready " + onThisDevice() + ". Tap Play."
     );
   }
 }
@@ -1405,7 +1460,7 @@ async function downloadEntry(entry, announce) {
     render();
     renderCatalog();
   }
-  if (saved && announce) setNotice(savedTitle + " is ready on this iPad. Tap Play.");
+  if (saved && announce) setNotice(savedTitle + " is ready " + onThisDevice() + ". Tap Play.");
   return saved;
 }
 
@@ -2027,7 +2082,7 @@ async function playLocal(track) {
     const blob = await playableBlob(track);
     if (!blob) {
       finishTrackChange();
-      setNotice("That song is not on this iPad.");
+      setNotice("That song is not " + onThisDevice() + ".");
       return;
     }
     url = prepareURL(track.id, blob);

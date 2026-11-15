@@ -19,7 +19,7 @@ struct AddTrackSheet: View {
                     .font(.largeTitle.weight(.bold))
                     .foregroundColor(.white)
 
-                Button("From this iPad") {
+                Button("From this \(Theme.deviceName)") {
                     importing = true
                 }
                 .buttonStyle(BigButtonStyle())
