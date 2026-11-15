@@ -125,7 +125,7 @@ let youtubeSearchToken = 0;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "17";
+const SW_BUILD = "18";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -1407,28 +1407,21 @@ function renderCatalog(options) {
   const scroller = list.closest(".sheet-body");
   const scrollTop = scroller ? scroller.scrollTop : 0;
   list.replaceChildren();
-  const savedCount = state.catalog.filter((entry) => savedOnIpad(entry)).length;
+  const pending = state.catalog.filter((entry) => !savedOnIpad(entry));
   if (state.macError) {
     status.textContent = state.macError;
   } else if (state.catalog.length === 0) {
     status.textContent = "No songs on the computer yet.";
-  } else if (savedCount === 0) {
-    status.textContent = "Tap Download to put a song " + onThisDevice() + ".";
+  } else if (pending.length === 0) {
+    status.textContent = "Every song on the computer is already " + onThisDevice() + ".";
   } else {
-    status.textContent = "Songs " + onThisDevice() + " are ready. Tap Play.";
+    status.textContent = "Tap Download to put a song " + onThisDevice() + ".";
   }
-  for (const entry of state.catalog) {
-    const already = savedOnIpad(entry);
-    const savedTrack = already ? trackForFile(entry.file) : null;
-    const playing = Boolean(savedTrack && savedTrack.id === state.currentId && state.playing);
+  for (const entry of pending) {
     const row = document.createElement("div");
-    row.className = "catalog-row" + (already ? " saved" : "");
-    const text = document.createElement(already ? "button" : "div");
-    text.className = already ? "catalog-play" : "text";
-    if (already) {
-      text.type = "button";
-      text.dataset.playSaved = entry.file;
-    }
+    row.className = "catalog-row";
+    const text = document.createElement("div");
+    text.className = "text";
     const title = document.createElement("span");
     title.className = "song-title";
     title.textContent = entry.title;
@@ -1438,20 +1431,13 @@ function renderCatalog(options) {
     text.append(title, sub);
     const button = document.createElement("button");
     button.type = "button";
-    if (already) {
-      button.className = "download play-ready";
-      button.dataset.playSaved = entry.file;
-      button.textContent = playing ? "Playing" : "Play";
-    } else {
-      button.className = "download";
-      button.dataset.download = entry.file;
-      button.disabled = downloading.has(entry.file);
-      button.textContent = downloading.has(entry.file) ? "Downloading…" : "Download";
-    }
+    button.className = "download";
+    button.dataset.download = entry.file;
+    button.disabled = downloading.has(entry.file);
+    button.textContent = downloading.has(entry.file) ? "Downloading…" : "Download";
     row.append(text, button);
     list.append(row);
   }
-  const pending = state.catalog.filter((entry) => !savedOnIpad(entry));
   const downloadAll = document.getElementById("download-all");
   downloadAll.hidden = pending.length === 0;
   downloadAll.disabled = state.working || pending.length === 0;
