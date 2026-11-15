@@ -726,6 +726,16 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
 
 .now-favorite:active { opacity: 0.72; }
 
+.now-art {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(144, 176, 208, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(90, 176, 196, 0.5);
+}
+
 .now-favorite.is-on {
   color: var(--accent-alt);
   background: rgba(180, 60, 108, 0.18);
@@ -1377,6 +1387,12 @@ html.iphone .now-favorite {
   height: 38px;
   border-radius: 10px;
   margin-top: 0;
+}
+
+html.iphone .now-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 11px;
 }
 
 html.iphone .now-bar {
