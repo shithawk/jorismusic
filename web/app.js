@@ -125,6 +125,25 @@ let youtubeSearchToken = 0;
 let linkConfirmId = "";
 const downloading = new Set();
 
+const SW_BUILD = "15";
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  });
+  navigator.serviceWorker
+    .register("/sw.js?build=" + SW_BUILD, { updateViaCache: "none" })
+    .then((reg) => {
+      reg.update().catch(() => {});
+      setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+    })
+    .catch(() => {});
+}
+
 const audio = () => document.getElementById("audio");
 
 document.addEventListener("DOMContentLoaded", init);
@@ -167,9 +186,7 @@ async function init() {
   render();
   refreshSavedLinks();
   requestPersist();
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
-  }
+  registerServiceWorker();
   setInterval(() => {
     if (!state.currentId || seekHold) return;
     if (pendingSeek) applyPendingSeek();
