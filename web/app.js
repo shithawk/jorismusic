@@ -71,6 +71,8 @@ function applyDeviceCopy() {
   set("videos-empty", "No videos " + on + " yet.");
   const hintSub = document.querySelector("#install-hint .hint-sub");
   if (hintSub) hintSub.hidden = deviceKind() !== "iphone";
+  document.documentElement.classList.toggle("iphone", deviceKind() === "iphone");
+  document.documentElement.classList.toggle("ipad", deviceKind() === "ipad");
 }
 let ytPlayer = null;
 let ytReady = false;

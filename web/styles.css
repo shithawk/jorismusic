@@ -1137,28 +1137,343 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 
 #audio { display: none; }
 
-@media (max-width: 430px) {
-  .top-nav-row > .home:not(.search-clear) {
-    padding: 8px 10px;
-    font-size: 1.05rem;
-  }
+/* iPhone — compact tap targets (~44px min), tighter rhythm, more list on screen */
+html.iphone {
+  --transport-bar: calc(72px + env(safe-area-inset-bottom));
+  --top-nav-offset: calc(56px + env(safe-area-inset-top));
+}
 
-  .nav-search {
-    min-height: 50px;
-  }
+html.iphone body.has-now {
+  --now-bar-space: 132px;
+}
 
-  .search-clear {
-    min-width: 72px;
-    font-size: 1.15rem;
-  }
+html.iphone .top-nav {
+  gap: 6px;
+  padding: calc(6px + env(safe-area-inset-top)) 10px 6px;
+}
 
-  .hint-card,
-  .actions {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
+html.iphone .top-nav-row {
+  gap: 6px;
+}
 
-  .banner {
-    height: clamp(160px, 42vw, 220px);
+html.iphone .top-nav-row > .home:not(.search-clear) {
+  min-height: 40px;
+  padding: 6px 9px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  gap: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+html.iphone .top-nav-row > .home:not(.search-clear) svg {
+  width: 22px;
+  height: 22px;
+}
+
+html.iphone .nav-search-wrap {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+html.iphone .nav-search {
+  min-height: 44px;
+  padding: 2px 8px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+html.iphone .nav-search input {
+  min-height: 40px;
+  height: 40px;
+  font-size: 1.05rem;
+}
+
+html.iphone .nav-search:focus-within input {
+  min-height: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+}
+
+html.iphone .search-clear {
+  min-width: 58px;
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 0.95rem;
+}
+
+html.iphone .banner {
+  height: clamp(140px, 38vw, 200px);
+}
+
+html.iphone .banner h1 {
+  font-size: 1.6rem;
+}
+
+html.iphone .hint-card {
+  margin: 10px 12px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+html.iphone .hint-card .hint-sub {
+  margin-top: 6px;
+  font-size: 0.88rem;
+}
+
+html.iphone .actions {
+  gap: 8px;
+  padding: 10px 12px 0;
+}
+
+html.iphone .big {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  gap: 3px;
+  line-height: 1.2;
+}
+
+html.iphone .actions .big,
+html.iphone .big.white,
+html.iphone .big.prominent,
+html.iphone .big.plain {
+  min-height: 44px;
+}
+
+html.iphone .play-favourites {
+  min-height: 44px;
+  font-size: 0.92rem;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+html.iphone .big.prominent,
+html.iphone .big.plain {
+  box-shadow: inset 0 0 0 2px #000;
+}
+
+html.iphone .big.plain {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+html.iphone .empty {
+  padding: 6px 12px 0;
+  font-size: 1.1rem;
+}
+
+html.iphone .finder {
+  gap: 8px;
+  padding: 10px 12px 8px;
+}
+
+html.iphone .finder-hint {
+  font-size: 1rem;
+}
+
+html.iphone .song {
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 10px 10px 22px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 2px rgba(90, 176, 196, 0.35);
+}
+
+html.iphone .song-title {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+html.iphone .song-sub {
+  font-size: 0.88rem;
+}
+
+html.iphone .song-favorite {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+html.iphone .song-favorite svg {
+  width: 22px;
+  height: 22px;
+}
+
+html.iphone .song-play {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+html.iphone .song-play svg {
+  width: 26px;
+  height: 26px;
+}
+
+html.iphone .transport {
+  gap: 5px;
+  padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
+}
+
+html.iphone .transport .big {
+  min-height: 52px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  gap: 2px;
+  line-height: 1.05;
+}
+
+html.iphone .transport .big svg {
+  width: 24px;
+  height: 24px;
+}
+
+html.iphone .now-stack {
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--transport-bar) + 6px);
+}
+
+html.iphone .now-dock {
+  gap: 4px;
+  padding: 0 0 6px;
+  border-radius: 14px;
+}
+
+html.iphone .now-favorite {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+html.iphone .now-bar-status {
+  font-size: 0.68rem;
+}
+
+html.iphone #now-bar-title {
+  font-size: 0.95rem;
+}
+
+html.iphone .dock-seek {
+  height: 56px;
+}
+
+html.iphone .seek-time {
+  font-size: 1rem;
+}
+
+html.iphone .seek-time.start {
+  left: 48px;
+}
+
+html.iphone .seek-thumb {
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  border-width: 3px;
+}
+
+html.iphone .sheet {
+  padding: var(--top-nav-offset) 12px 8px;
+}
+
+html.iphone .stack {
+  gap: 12px;
+}
+
+html.iphone .sheet h1 {
+  font-size: 1.5rem;
+}
+
+html.iphone .sheet h2 {
+  font-size: 1.2rem;
+}
+
+html.iphone .search-box {
+  min-height: 52px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+html.iphone .search-box input {
+  font-size: 1.05rem;
+  padding: 4px 0;
+}
+
+html.iphone #clear-search,
+html.iphone #clear-artist-search,
+html.iphone #youtube-search-go {
+  min-height: 44px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+}
+
+html.iphone input {
+  padding: 10px 12px;
+  font-size: 1.05rem;
+}
+
+html.iphone .catalog-row,
+html.iphone .manage-row {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+html.iphone .download,
+html.iphone .remove {
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 0.95rem;
+}
+
+html.iphone .artist-row {
+  min-height: 52px;
+  padding: 8px 10px 8px 14px;
+}
+
+html.iphone .play-all {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  border-radius: 12px;
+}
+
+html.iphone .notice {
+  left: 10px;
+  right: 10px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  gap: 8px;
+}
+
+html.iphone .notice-action {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+}
+
+html.iphone .confirm-card {
+  padding: 16px;
+  gap: 12px;
+}
+
+html.iphone body.search-page .search-title {
+  margin: var(--top-nav-offset) 12px 0;
+  font-size: 1.5rem;
+}
+
+/* Fallback before JS: narrow coarse-pointer phones */
+@media (max-width: 430px) and (pointer: coarse) {
+  html:not(.ipad) .top-nav-row > .home:not(.search-clear) {
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 0.92rem;
   }
 }
