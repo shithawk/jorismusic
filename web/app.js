@@ -25,7 +25,16 @@ const fileBlobs = new Map();
 const fileURLs = new Map();
 const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 
+function localPreviewIPhone() {
+  const h = location.hostname;
+  const local = h === "localhost" || h === "127.0.0.1" || h === "[::1]";
+  if (!local) return false;
+  const q = new URLSearchParams(location.search);
+  return q.get("iphone") === "1" || q.get("phone") === "1";
+}
+
 function deviceKind() {
+  if (localPreviewIPhone()) return "iphone";
   const ua = navigator.userAgent;
   if (/iPhone|iPod/.test(ua)) return "iphone";
   if (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ipad";
@@ -1576,7 +1585,9 @@ async function addPastedLink(text) {
 }
 
 function showLinkConfirm(status, track) {
-  document.getElementById("link-confirm-status").textContent = status;
+  const statusEl = document.getElementById("link-confirm-status");
+  statusEl.textContent = status;
+  statusEl.classList.toggle("link-confirm-hint", !track);
   const name = document.getElementById("link-confirm-name");
   const detail = document.getElementById("link-confirm-detail");
   const play = document.getElementById("link-confirm-play");

@@ -11,13 +11,20 @@
   <meta name="theme-color" content="#121a32">
   <script>
     (function () {
-      if (/iPhone|iPod/.test(navigator.userAgent)) document.documentElement.classList.add("iphone");
+      var h = location.hostname;
+      var local = h === "localhost" || h === "127.0.0.1" || h === "[::1]";
+      var force =
+        local &&
+        (location.search.indexOf("iphone=1") !== -1 || location.search.indexOf("phone=1") !== -1);
+      if (force || /iPhone|iPod/.test(navigator.userAgent)) {
+        document.documentElement.classList.add("iphone");
+      }
     })();
   </script>
   <link rel="icon" href="/favicon.ico?v=play1">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png?v=go1">
-  <link rel="stylesheet" href="/styles.css?v=70">
+  <link rel="stylesheet" href="/styles.css?v=78">
 </head>
 <body>
   <div class="top-nav">
@@ -136,7 +143,6 @@
           <button id="add-link" class="big prominent" type="button" disabled>Add this link</button>
         </div>
         <p id="add-error" class="error" hidden></p>
-        <h2>On the computer</h2>
         <p id="mac-status" class="lede"></p>
         <div id="catalog-list"></div>
       </div>
@@ -236,6 +242,6 @@
     <button id="notice-action" class="notice-action" type="button" hidden>Open in YouTube</button>
   </div>
   <audio id="audio" playsinline preload="none"></audio>
-  <script src="/app.js?v=58" defer></script>
+  <script src="/app.js?v=61" defer></script>
 </body>
 </html>

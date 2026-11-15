@@ -175,12 +175,15 @@ body:not(.search-page) #search-page { display: none !important; }
 
 body.search-page .search-title {
   display: block;
-  margin: var(--top-nav-offset) 24px 0;
+  margin: 0;
+  padding: calc(var(--top-nav-offset) + 12px) 24px 8px;
   font-size: 2.1rem;
   font-weight: 700;
 }
 
-body.search-page #search-page { padding-top: 16px; }
+body.search-page #search-page {
+  padding-top: 4px;
+}
 
 .search-results-label {
   font-size: 1.35rem;
@@ -372,7 +375,8 @@ body.songs-page .home-only { display: none !important; }
 
 body.songs-page .songs-title {
   display: block;
-  margin: var(--top-nav-offset) 24px 0;
+  margin: 0;
+  padding: calc(var(--top-nav-offset) + 12px) 24px 8px;
   font-size: 2.1rem;
   font-weight: 700;
 }
@@ -671,7 +675,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
 .now-dock {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   padding: 0 0 8px;
   border-radius: 20px;
   overflow: hidden;
@@ -698,7 +702,8 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px 0 8px;
+  padding: 1px 10px 6px 8px;
+  margin-top: -1px;
 }
 
 .now-favorite {
@@ -706,10 +711,10 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   display: flex;
   align-items: center;
   justify-content: center;
-  align-self: center;
+  align-self: flex-start;
+  margin: 1px 0 0;
   width: 42px;
   height: 42px;
-  margin: 0;
   padding: 0;
   border: 0;
   border-radius: 14px;
@@ -738,7 +743,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   min-width: 0;
   min-height: 0;
   margin: 0;
-  padding: 0 2px;
+  padding: 1px 2px 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -1094,6 +1099,11 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 }
 
 .confirm-card h2 { font-size: 2rem; }
+.confirm-card h2.link-confirm-hint {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
 .confirm-card p { font-size: 1.35rem; }
 #link-confirm-name { font-size: 1.7rem; font-weight: 700; }
 
@@ -1140,7 +1150,8 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 /* iPhone — compact tap targets (~44px min), tighter rhythm, more list on screen */
 html.iphone {
   --transport-bar: calc(72px + env(safe-area-inset-bottom));
-  --top-nav-offset: calc(56px + env(safe-area-inset-top));
+  --top-nav-offset: calc(112px + env(safe-area-inset-top));
+  --nav-clearance: calc(var(--top-nav-offset) + 12px);
 }
 
 html.iphone body.has-now {
@@ -1153,25 +1164,37 @@ html.iphone .top-nav {
 }
 
 html.iphone .top-nav-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
 }
 
 html.iphone .top-nav-row > .home:not(.search-clear) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
   min-height: 40px;
-  padding: 6px 9px;
+  padding: 6px 4px;
   border-radius: 12px;
-  font-size: 0.92rem;
-  gap: 4px;
+  font-size: 0.78rem;
+  line-height: 1.1;
+  gap: 2px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 html.iphone .top-nav-row > .home:not(.search-clear) svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 html.iphone .nav-search-wrap {
-  flex: 1 1 100%;
+  grid-column: 1 / -1;
+  display: flex;
+  width: 100%;
   min-width: 0;
 }
 
@@ -1339,15 +1362,25 @@ html.iphone .now-stack {
 }
 
 html.iphone .now-dock {
-  gap: 4px;
+  gap: 2px;
   padding: 0 0 6px;
   border-radius: 14px;
+}
+
+html.iphone .now-bar-row {
+  padding: 0 8px 4px 6px;
+  margin-top: -2px;
 }
 
 html.iphone .now-favorite {
   width: 38px;
   height: 38px;
   border-radius: 10px;
+  margin-top: 0;
+}
+
+html.iphone .now-bar {
+  padding-top: 0;
 }
 
 html.iphone .now-bar-status {
@@ -1378,7 +1411,7 @@ html.iphone .seek-thumb {
 }
 
 html.iphone .sheet {
-  padding: var(--top-nav-offset) 12px 8px;
+  padding: var(--nav-clearance) 12px 8px;
 }
 
 html.iphone .stack {
@@ -1464,9 +1497,26 @@ html.iphone .confirm-card {
   gap: 12px;
 }
 
+html.iphone .confirm-card h2.link-confirm-hint {
+  font-size: 1rem;
+}
+
 html.iphone body.search-page .search-title {
-  margin: var(--top-nav-offset) 12px 0;
+  padding: var(--nav-clearance) 12px 6px;
   font-size: 1.5rem;
+}
+
+html.iphone body.songs-page .songs-title {
+  padding: var(--nav-clearance) 12px 6px;
+  font-size: 1.5rem;
+}
+
+html.iphone body.search-page #search-page {
+  padding-top: 0;
+}
+
+html.iphone #search-results > .search-results-label:first-of-type {
+  margin-top: 2px;
 }
 
 /* Fallback before JS: narrow coarse-pointer phones */
