@@ -35,11 +35,34 @@ function localPreviewIPhone() {
   return q.get("iphone") === "1" || q.get("phone") === "1";
 }
 
+function isAndroidPhone() {
+  const ua = navigator.userAgent;
+  return /Android/i.test(ua) && /Mobile/i.test(ua);
+}
+
+function isIPadLike() {
+  const ua = navigator.userAgent;
+  return /iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** Compact phone UI (html.iphone) — not the same as deviceLabel / install copy. */
+function compactPhoneLayout() {
+  if (localPreviewIPhone()) return true;
+  const ua = navigator.userAgent;
+  if (/iPhone|iPod/.test(ua)) return true;
+  if (isAndroidPhone()) return true;
+  if (isIPadLike()) return false;
+  if (typeof matchMedia !== "undefined" && matchMedia("(max-width: 540px) and (pointer: coarse)").matches) {
+    return true;
+  }
+  return false;
+}
+
 function deviceKind() {
   if (localPreviewIPhone()) return "iphone";
   const ua = navigator.userAgent;
   if (/iPhone|iPod/.test(ua)) return "iphone";
-  if (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ipad";
+  if (isIPadLike()) return "ipad";
   return "other";
 }
 
@@ -82,7 +105,7 @@ function applyDeviceCopy() {
   set("videos-empty", "No videos " + on + " yet.");
   const hintSub = document.querySelector("#install-hint .hint-sub");
   if (hintSub) hintSub.hidden = deviceKind() !== "iphone";
-  document.documentElement.classList.toggle("iphone", deviceKind() === "iphone");
+  document.documentElement.classList.toggle("iphone", compactPhoneLayout());
   document.documentElement.classList.toggle("ipad", deviceKind() === "ipad");
 }
 let ytPlayer = null;
@@ -108,6 +131,7 @@ document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   applyDeviceCopy();
+  window.addEventListener("resize", applyDeviceCopy);
   document.getElementById("install-hint").hidden = standalone();
   state.shuffle = loadShuffle();
   bindEvents();

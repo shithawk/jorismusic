@@ -1160,8 +1160,13 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 /* iPhone — compact tap targets (~44px min), tighter rhythm, more list on screen */
 html.iphone {
   --transport-bar: calc(72px + env(safe-area-inset-bottom));
-  --top-nav-offset: calc(112px + env(safe-area-inset-top));
+  --top-nav-offset: calc(118px + env(safe-area-inset-top));
   --nav-clearance: calc(var(--top-nav-offset) + 12px);
+}
+
+/* Home: banner/title were scrolling under the fixed nav + search row */
+html.iphone body:not(.search-page):not(.songs-page) #songs {
+  padding-top: calc(var(--top-nav-offset) + 8px);
 }
 
 html.iphone body.has-now {
