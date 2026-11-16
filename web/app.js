@@ -131,7 +131,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "27";
+const SW_BUILD = "28";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -272,6 +272,12 @@ async function init() {
     if (!shouldAdvance() || !isSource("local")) return;
     if (!player.duration || player.currentTime + 0.75 < player.duration) return;
     step(1);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!appInBackground()) return;
+    const track = currentTrack();
+    if (!isStreamingTrack(track) || isAudiblyPlaying()) return;
+    skipStreamingTracksWhileBackground(1);
   });
   try {
     state.tracks = sortTracks(await allTracks());
@@ -1435,6 +1441,41 @@ function streamingPlaybackUnavailable() {
   return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
+function appInBackground() {
+  return typeof document !== "undefined" && document.hidden;
+}
+
+function isStreamingTrack(track) {
+  return Boolean(track && (track.source === "youtube" || track.source === "soundcloud"));
+}
+
+function skipStreamingTracksWhileBackground(direction) {
+  if (!appInBackground() || !state.tracks.length) return false;
+  const originId = state.currentId;
+  let guard = state.tracks.length + 1;
+  const stepDir = direction < 0 ? -1 : 1;
+  while (guard-- > 0) {
+    const next = trackForStep(stepDir);
+    if (!next) break;
+    if (isStreamingTrack(next)) {
+      if (originId != null && next.id === originId && state.currentId !== originId) break;
+      state.currentId = next.id;
+      continue;
+    }
+    void playTrack(next, { open: playerIsOpen() });
+    return true;
+  }
+  clearStreamingWatchdog();
+  finishTrackChange();
+  pauseYouTube();
+  pauseSoundCloud();
+  stopPlayback();
+  state.currentId = null;
+  closePlayer();
+  render();
+  return true;
+}
+
 function advancePastStreamingFailure() {
   if (!shouldAdvance()) return;
   const track = currentTrack();
@@ -2162,6 +2203,10 @@ function shouldAdvance() {
 }
 
 async function playTrack(track, options) {
+  if (isStreamingTrack(track) && appInBackground()) {
+    skipStreamingTracksWhileBackground(1);
+    return;
+  }
   beginTrackChange();
   const open = !options || options.open !== false;
   if (state.shuffle && state.currentId && state.currentId !== track.id && !state.shuffleRewind) {
