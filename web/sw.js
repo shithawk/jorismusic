@@ -5,7 +5,7 @@ const SHELL = [
   "/styles.css",
   "/styles.css?v=112",
   "/app.js",
-  "/app.js?v=82",
+  "/app.js?v=83",
   "/manifest.webmanifest",
   "/favicon.ico?v=play1",
   "/youtube-logo.png",
