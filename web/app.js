@@ -124,10 +124,11 @@ let seekBar = null;
 let pendingSeek = null;
 let lastSeekAt = 0;
 let youtubeSearchToken = 0;
+let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "25";
+const SW_BUILD = "26";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -313,6 +314,9 @@ function bindEvents() {
   document.getElementById("youtube-search-icon").addEventListener("click", (event) => {
     event.preventDefault();
     document.getElementById("youtube-search").focus();
+  });
+  document.getElementById("youtube-clear-results").addEventListener("click", () => {
+    clearYouTubeSearch();
   });
   document.getElementById("youtube-results").addEventListener("click", (event) => {
     const play = event.target.closest("[data-play]");
@@ -1096,6 +1100,20 @@ function setVideoSearchStatus(text) {
   status.textContent = text || "";
 }
 
+function updateYouTubeClearButton() {
+  const button = document.getElementById("youtube-clear-results");
+  if (button) button.hidden = !youtubeHasSearched;
+}
+
+function clearYouTubeSearch() {
+  youtubeSearchToken++;
+  youtubeHasSearched = false;
+  document.getElementById("youtube-search").value = "";
+  document.getElementById("youtube-results").replaceChildren();
+  setVideoSearchStatus("");
+  updateYouTubeClearButton();
+}
+
 async function searchYouTube() {
   const query = document.getElementById("youtube-search").value.trim();
   const token = ++youtubeSearchToken;
@@ -1105,12 +1123,15 @@ async function searchYouTube() {
   }
   setVideoSearchStatus("Searching…");
   document.getElementById("youtube-results").replaceChildren();
+  updateYouTubeClearButton();
   try {
     const response = await fetch("https://yt.chocolatemoo53.com/api/v1/search?type=video&q=" + encodeURIComponent(query));
     if (!response.ok) throw new Error("search failed");
     const payload = await response.json();
     if (token !== youtubeSearchToken) return;
     const results = youtubeSearchResults(payload);
+    youtubeHasSearched = true;
+    updateYouTubeClearButton();
     if (!results.length) {
       setVideoSearchStatus("No videos found. Try another word.");
       return;
@@ -1119,6 +1140,8 @@ async function searchYouTube() {
     renderYouTubeResults(results);
   } catch {
     if (token !== youtubeSearchToken) return;
+    youtubeHasSearched = true;
+    updateYouTubeClearButton();
     setVideoSearchStatus("YouTube search did not work. Try again.");
   }
 }
