@@ -74,7 +74,7 @@ h1, h2, p { margin: 0; }
 .top-nav-row > .home:not(.search-clear) {
   flex: 0 1 auto;
   padding: 10px 12px;
-  font-size: 1.22rem;
+  font-size: 1.3rem;
 }
 
 .nav-search-wrap {
@@ -92,7 +92,7 @@ h1, h2, p { margin: 0; }
   min-height: 0;
   min-width: 84px;
   padding: 0 12px;
-  font-size: 1.35rem;
+  font-size: 1.43rem;
   font-weight: 700;
   background: #fff;
   color: #000;
@@ -208,7 +208,7 @@ body.search-page #search-page {
   border-radius: 18px;
   background: #fff;
   color: #000;
-  font-size: 1.35rem;
+  font-size: 1.43rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
@@ -314,7 +314,7 @@ body.has-now #songs { bottom: calc(var(--transport-bar) + var(--now-bar-space));
   min-height: 80px;
   padding: 12px;
   border-radius: 18px;
-  font-size: 1.35rem;
+  font-size: 1.43rem;
   font-weight: 700;
   text-align: center;
 }
@@ -983,7 +983,7 @@ html.iphone #player-sub { font-size: 0.88rem; }
 .transport .big {
   min-height: 96px;
   padding: 8px 4px;
-  font-size: 1.15rem;
+  font-size: 1.23rem;
   line-height: 1.1;
 }
 
@@ -1043,10 +1043,11 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
   font-size: 0.95rem;
   font-weight: 600;
   padding: 6px 12px;
-  border: 0;
+  border: 2px solid var(--accent-alt);
   border-radius: 10px;
-  background: rgba(144, 176, 208, 0.15);
-  color: var(--accent);
+  background: rgba(144, 176, 208, 0.1);
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1229,23 +1230,35 @@ html.iphone .top-nav-row {
 
 html.iphone .top-nav-row > .home:not(.search-clear) {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-width: 0;
-  min-height: 40px;
-  padding: 6px 4px;
+  min-height: 36px;
+  padding: 4px 4px;
   border-radius: 12px;
   font-size: 0.78rem;
   line-height: 1.1;
-  gap: 2px;
+  gap: 4px;
+  white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 html.iphone .top-nav-row > .home:not(.search-clear) svg {
-  width: 20px;
-  height: 20px;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+html.iphone #home {
+  padding-left: 3px;
+  padding-right: 7px;
+}
+
+html.iphone #home span {
+  padding-right: 3px;
 }
 
 html.iphone .nav-search-wrap {
@@ -1276,8 +1289,8 @@ html.iphone .nav-search:focus-within input {
 
 html.iphone .search-clear {
   min-width: 58px;
-  min-height: 44px;
-  padding: 0 8px;
+  min-height: 40px;
+  padding: 2px 8px;
   font-size: 0.95rem;
 }
 
@@ -1312,7 +1325,7 @@ html.iphone .big {
   min-height: 44px;
   padding: 8px 10px;
   border-radius: 12px;
-  font-size: 0.98rem;
+  font-size: 1.06rem;
   font-weight: 700;
   gap: 3px;
   line-height: 1.2;
@@ -1327,7 +1340,7 @@ html.iphone .big.plain {
 
 html.iphone .play-favourites {
   min-height: 44px;
-  font-size: 0.92rem;
+  font-size: 1rem;
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
@@ -1402,7 +1415,7 @@ html.iphone .transport .big {
   min-height: 52px;
   padding: 4px 2px;
   border-radius: 12px;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   gap: 2px;
   line-height: 1.05;
 }
@@ -1585,8 +1598,21 @@ html.iphone #search-results > .search-results-label:first-of-type {
 /* Fallback before JS: narrow coarse-pointer phones */
 @media (max-width: 430px) and (pointer: coarse) {
   html:not(.ipad) .top-nav-row > .home:not(.search-clear) {
-    min-height: 40px;
-    padding: 6px 9px;
+    min-height: 36px;
+    padding: 4px 9px;
     font-size: 0.92rem;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 4px;
+  }
+
+  html:not(.ipad) #home {
+    padding-left: 5px;
+    padding-right: 10px;
+  }
+
+  html:not(.ipad) #home span {
+    padding-right: 3px;
   }
 }
