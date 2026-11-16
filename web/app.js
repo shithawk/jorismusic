@@ -108,6 +108,7 @@ function applyDeviceCopy() {
   if (hintSub) hintSub.hidden = deviceKind() !== "iphone";
   document.documentElement.classList.toggle("iphone", compactPhoneLayout());
   document.documentElement.classList.toggle("ipad", deviceKind() === "ipad");
+  updateShuffleButton();
 }
 let ytPlayer = null;
 let ytReady = false;
@@ -2365,7 +2366,7 @@ function updateShuffleButton() {
   button.classList.toggle("plain", !on);
   button.setAttribute("aria-pressed", on ? "true" : "false");
   button.setAttribute("aria-label", on ? "Shuffle on" : "Shuffle off");
-  label.textContent = on ? "Shuffle on" : "Shuffle off";
+  label.textContent = on ? "On" : "Off";
 }
 
 function loadShuffle() {

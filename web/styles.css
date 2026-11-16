@@ -7,7 +7,8 @@
   --accent-alt: #b43c6c;
   --text: #f0eef8;
   --transport-bar: calc(114px + env(safe-area-inset-bottom));
-  --top-nav-offset: calc(88px + env(safe-area-inset-top));
+  --top-nav-offset: calc(84px + env(safe-area-inset-top));
+  --nav-gap: 4px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -92,7 +93,7 @@ h1, h2, p { margin: 0; }
   min-height: 0;
   min-width: 84px;
   padding: 0 12px;
-  font-size: 1.43rem;
+  font-size: calc(1.43rem - 1pt);
   font-weight: 700;
   background: #fff;
   color: #000;
@@ -171,7 +172,7 @@ body:not(.search-page) #search-page { display: none !important; }
 body.search-page .search-title {
   display: block;
   margin: 0;
-  padding: calc(var(--top-nav-offset) + 12px) 24px 8px;
+  padding: calc(var(--top-nav-offset) + var(--nav-gap)) 24px 8px;
   font-size: 2.1rem;
   font-weight: 700;
 }
@@ -393,7 +394,7 @@ body.songs-page .home-only { display: none !important; }
 body.songs-page .songs-title {
   display: block;
   margin: 0;
-  padding: calc(var(--top-nav-offset) + 12px) 24px 8px;
+  padding: calc(var(--top-nav-offset) + var(--nav-gap)) 24px 8px;
   font-size: 2.1rem;
   font-weight: 700;
 }
@@ -466,7 +467,7 @@ body.songs-page .finder {
 }
 
 .sheet-search {
-  top: 0;
+  position: static;
   margin-top: 16px;
 }
 
@@ -930,7 +931,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: var(--top-nav-offset) 24px var(--transport-space);
+  padding: calc(var(--top-nav-offset) + var(--nav-gap)) 24px var(--transport-space);
 }
 
 #player-title {
@@ -1015,6 +1016,7 @@ html.iphone #player-sub { font-size: 0.88rem; }
 }
 
 .transport .big.plain {
+  border: 3px solid #000;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--accent-alt) 68%, #fff) 0%,
@@ -1025,6 +1027,8 @@ html.iphone #player-sub { font-size: 0.88rem; }
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -5px 8px rgba(0, 0, 0, 0.38),
+    0 0 10px color-mix(in srgb, var(--accent-alt) 70%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent-alt) 36%, transparent),
     0 5px 0 rgba(0, 0, 0, 0.48),
     0 9px 16px rgba(0, 0, 0, 0.55);
 }
@@ -1046,6 +1050,7 @@ html.iphone #player-sub { font-size: 0.88rem; }
 }
 
 .transport #shuffle.is-on {
+  border: 3px solid #000;
   color: #fff;
   background: linear-gradient(
     180deg,
@@ -1057,6 +1062,8 @@ html.iphone #player-sub { font-size: 0.88rem; }
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.32),
     inset 0 -5px 8px rgba(0, 0, 0, 0.32),
+    0 0 10px color-mix(in srgb, var(--accent) 72%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent) 38%, transparent),
     0 5px 0 rgba(0, 0, 0, 0.46),
     0 8px 16px rgba(0, 0, 0, 0.52);
 }
@@ -1071,8 +1078,10 @@ html.iphone #player-sub { font-size: 0.88rem; }
 }
 
 .transport .big.plain:active:not(:disabled) {
+  border: 3px solid #000;
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.35),
+    0 0 7px color-mix(in srgb, var(--accent-alt) 50%, transparent),
     0 1px 0 rgba(0, 0, 0, 0.35),
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
@@ -1107,7 +1116,7 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: var(--top-nav-offset) 24px 8px;
+  padding: calc(var(--top-nav-offset) + var(--nav-gap)) 24px 8px;
 }
 
 .sheet-body {
@@ -1299,13 +1308,13 @@ html.iphone .sheet .youtube-clear-results {
 /* iPhone — compact tap targets (~44px min), tighter rhythm, more list on screen */
 html.iphone {
   --transport-bar: calc(72px + env(safe-area-inset-bottom));
-  --top-nav-offset: calc(118px + env(safe-area-inset-top));
-  --nav-clearance: calc(var(--top-nav-offset) + 12px);
+  --top-nav-offset: calc(102px + env(safe-area-inset-top));
+  --nav-clearance: calc(var(--top-nav-offset) + var(--nav-gap));
 }
 
 /* Home: banner/title were scrolling under the fixed nav + search row */
 html.iphone body:not(.search-page):not(.songs-page) #songs {
-  padding-top: calc(var(--top-nav-offset) + 8px);
+  padding-top: var(--top-nav-offset);
 }
 
 html.iphone body.has-now {
@@ -1389,7 +1398,7 @@ html.iphone .search-clear {
   min-width: 58px;
   min-height: 40px;
   padding: 2px 8px;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem - 1pt);
 }
 
 html.iphone .banner {
@@ -1514,8 +1523,10 @@ html.iphone .transport .big:active:not(:disabled) {
 }
 
 html.iphone .transport .big.plain:active:not(:disabled) {
+  border: 2px solid #000;
   box-shadow:
     inset 0 2px 5px rgba(0, 0, 0, 0.34),
+    0 0 6px color-mix(in srgb, var(--accent-alt) 48%, transparent),
     0 1px 0 rgba(0, 0, 0, 0.32),
     0 2px 6px rgba(0, 0, 0, 0.38);
 }
@@ -1539,9 +1550,12 @@ html.iphone .transport .big {
 }
 
 html.iphone .transport .big.plain {
+  border: 2px solid #000;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 -4px 6px rgba(0, 0, 0, 0.34),
+    0 0 8px color-mix(in srgb, var(--accent-alt) 66%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent-alt) 32%, transparent),
     0 4px 0 rgba(0, 0, 0, 0.42),
     0 6px 12px rgba(0, 0, 0, 0.48);
 }
@@ -1556,9 +1570,12 @@ html.iphone .transport .big.prominent {
 }
 
 html.iphone .transport #shuffle.is-on {
+  border: 2px solid #000;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.26),
     inset 0 -4px 6px rgba(0, 0, 0, 0.28),
+    0 0 8px color-mix(in srgb, var(--accent) 68%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent) 34%, transparent),
     0 4px 0 rgba(0, 0, 0, 0.4),
     0 6px 12px rgba(0, 0, 0, 0.46);
 }
@@ -1566,6 +1583,12 @@ html.iphone .transport #shuffle.is-on {
 html.iphone .transport .big svg {
   width: 24px;
   height: 24px;
+}
+
+html.iphone .transport .big > span {
+  white-space: nowrap;
+  line-height: 1.05;
+  max-width: 100%;
 }
 
 html.iphone .now-stack {
