@@ -1,9 +1,9 @@
-const CACHE = "joris-shell-v138";
+const CACHE = "joris-shell-v140";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=103",
+  "/styles.css?v=105",
   "/app.js",
   "/app.js?v=75",
   "/manifest.webmanifest",
