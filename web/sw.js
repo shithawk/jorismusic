@@ -1,4 +1,4 @@
-const CACHE = "joris-shell-v153";
+const CACHE = "joris-shell-v154";
 const SHELL = [
   "/",
   "/index.html",
