@@ -129,6 +129,7 @@ let pendingYtPlay = false;
 let pendingYtVideo = "";
 let scWidget = null;
 let streamingWatchdog = null;
+let streamingHold = false;
 let noticeTimer = 0;
 let noticeActionURL = "";
 let ignoreAdvance = false;
@@ -141,7 +142,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "29";
+const SW_BUILD = "31";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -285,10 +286,8 @@ async function init() {
     step(1);
   });
   document.addEventListener("visibilitychange", () => {
-    if (!appInBackground()) return;
-    const track = currentTrack();
-    if (!isStreamingTrack(track) || isAudiblyPlaying()) return;
-    skipPastStreamingTracks(1);
+    if (!streamingHold) return;
+    resumeStreaming();
   });
   window.addEventListener("offline", () => {
     const track = currentTrack();
@@ -1075,7 +1074,7 @@ function renderSearchResults() {
     playAll.type = "button";
     playAll.className = "play-all";
     playAll.dataset.playAll = name;
-    playAll.textContent = "Play all " + name + " songs";
+    playAll.textContent = "Play all " + name;
     row.append(toggle, playAll);
     list.append(row);
     if (!open) continue;
@@ -1329,7 +1328,7 @@ function renderArtists() {
     playAll.type = "button";
     playAll.className = "play-all";
     playAll.dataset.playAll = group.name;
-    playAll.textContent = "Play all " + group.name + " songs";
+    playAll.textContent = "Play all " + group.name;
     row.append(toggle, playAll);
     list.append(row);
     if (!open) continue;
@@ -1394,6 +1393,8 @@ function showSongList() {
 function setPlaying(playing) {
   if (playing) clearStreamingWatchdog();
   state.playing = playing;
+  if (playing) streamingHold = isStreamingTrack(currentTrack());
+  else if (!appInBackground()) streamingHold = false;
   document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
   const playButton = document.getElementById("play-button");
   playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
@@ -1467,7 +1468,17 @@ function isStreamingTrack(track) {
 }
 
 function shouldSkipStreamingTrack(track) {
-  return isStreamingTrack(track) && (streamingPlaybackUnavailable() || appInBackground());
+  return isStreamingTrack(track) && streamingPlaybackUnavailable();
+}
+
+function resumeStreaming() {
+  const track = currentTrack();
+  if (!streamingHold || !isStreamingTrack(track)) return;
+  if (track.source === "youtube" && ytPlayer && ytPlayer.playVideo) {
+    try { ytPlayer.playVideo(); } catch { /* The player may not be ready yet. */ }
+  } else if (track.source === "soundcloud" && scWidget && scWidget.play) {
+    try { scWidget.play(); } catch { /* The widget may not be ready yet. */ }
+  }
 }
 
 function skipPastStreamingTracks(direction) {
@@ -1506,7 +1517,7 @@ function advancePastStreamingFailure() {
   setPlaying(false);
   pauseYouTube();
   pauseSoundCloud();
-  if (streamingPlaybackUnavailable() || appInBackground()) {
+  if (streamingPlaybackUnavailable()) {
     skipPastStreamingTracks(1);
     return;
   }
@@ -1531,7 +1542,7 @@ function armStreamingWatchdog() {
   streamingWatchdog = setTimeout(() => {
     streamingWatchdog = null;
     if (state.currentId !== trackId || !isSource(source)) return;
-    if (isAudiblyPlaying()) return;
+    if (isAudiblyPlaying() || (streamingHold && appInBackground())) return;
     advancePastStreamingFailure();
   }, ms);
 }
@@ -2308,6 +2319,7 @@ function isAudiblyPlaying() {
 }
 
 function userPause() {
+  streamingHold = false;
   const track = currentTrack();
   if (!track) return;
   if (track.source === "local") {
@@ -2640,7 +2652,7 @@ async function playSoundCloud(track) {
   stage.replaceChildren();
   const frame = document.createElement("iframe");
   frame.id = "sc-frame";
-  frame.setAttribute("allow", "autoplay; encrypted-media");
+  frame.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
   frame.setAttribute("scrolling", "no");
   frame.title = track.title || "SoundCloud";
   const widgetQuery =
@@ -2665,7 +2677,11 @@ async function playSoundCloud(track) {
     setPlaying(true);
     applyPendingSeek();
   });
-  scWidget.bind(window.SC.Widget.Events.PAUSE, () => { if (isSource("soundcloud")) setPlaying(false); });
+  scWidget.bind(window.SC.Widget.Events.PAUSE, () => {
+    if (!isSource("soundcloud")) return;
+    if (streamingHold && appInBackground()) return;
+    setPlaying(false);
+  });
   scWidget.bind(window.SC.Widget.Events.FINISH, () => {
     if (isSource("soundcloud") && shouldAdvance()) step(1);
   });
@@ -2730,7 +2746,10 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
           setPlaying(true);
           applyPendingSeek();
         }
-        if (event.data === YT.PlayerState.PAUSED) setPlaying(false);
+        if (event.data === YT.PlayerState.PAUSED) {
+          if (streamingHold && appInBackground()) return;
+          setPlaying(false);
+        }
         if (event.data === YT.PlayerState.ENDED && youtubeActuallyEnded(event)) step(1);
       },
       onError: (event) => {
@@ -2748,6 +2767,9 @@ function allowYouTubeFullscreen() {
   frame.setAttribute("webkitallowfullscreen", "");
   const allow = new Set((frame.getAttribute("allow") || "").split(";").map((part) => part.trim()).filter(Boolean));
   allow.add("fullscreen");
+  allow.add("autoplay");
+  allow.add("encrypted-media");
+  allow.add("picture-in-picture");
   frame.setAttribute("allow", [...allow].join("; "));
 }
 
