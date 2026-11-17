@@ -184,14 +184,6 @@ html[data-family-theme="steff"] body.section-artists {
   );
 }
 
-html[data-family-theme="steff"] #manage-songs,
-html[data-family-theme="steff"] #manage-sheet .sheet-body > h1 {
-  text-shadow:
-    0 0 0 1px #000,
-    0 1px 0 #000,
-    0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
 html[data-family-theme="zero"] {
   --bg: #0a0a0a;
   --card: rgba(255, 255, 255, 0.07);
@@ -650,7 +642,8 @@ html.iphone[data-family-theme="dan"] .transport #shuffle.is-on {
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 28px;
+  margin-bottom: 0;
 }
 
 .theme-picker-label {
@@ -685,15 +678,15 @@ body.section-home #finder > .theme-picker-bottom-stripe {
   position: relative;
   z-index: 2;
   flex: 0 0 auto;
-  margin: 0 0 10px;
+  margin: 8px 0 28px;
 }
 
 body.section-home .actions {
-  padding-bottom: 6px;
+  padding-bottom: 0;
 }
 
 body.section-home #finder {
-  padding-top: 6px;
+  padding-top: 0;
 }
 
 .theme-picker-label-text {
@@ -782,14 +775,15 @@ html[data-family-theme="zero"] .theme-chip.is-active {
 }
 
 html.iphone .theme-picker-wrap {
-  margin-top: 4px;
+  margin-top: 22px;
+  margin-bottom: 0;
 }
 
-html.iphone body.section-home .home-songs-sign {
+html.iphone .home-songs-sign {
   padding: 0 12px;
 }
 
-html.iphone body.section-home .home-songs-sign-text {
+html.iphone .home-songs-sign-text {
   font-size: clamp(2.1rem, 10vw, 2.8rem);
   letter-spacing: 0.05em;
 }
@@ -804,11 +798,11 @@ html.iphone .theme-picker-label-stripe {
 }
 
 html.iphone body.section-home #finder > .theme-picker-bottom-stripe {
-  margin-bottom: 8px;
+  margin: 6px 0 22px;
 }
 
 html.iphone body.section-home #finder {
-  padding-top: 4px;
+  padding-top: 0;
 }
 
 html.iphone .theme-picker-label-text {

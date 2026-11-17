@@ -19,6 +19,9 @@
   --top-nav-offset: calc(76px + env(safe-area-inset-top));
   --nav-gap: 4px;
   --nav-cream: #fff;
+  --play-all-label-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.72),
+    0 2px 12px rgba(0, 0, 0, 0.55);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -647,14 +650,14 @@ body.songs-page .finder {
   font-weight: 600;
 }
 
-body.section-home .home-songs-sign {
+.home-songs-sign {
   position: relative;
   margin: 0;
   padding: 0 18px;
   border-radius: 4px;
   overflow: hidden;
   isolation: isolate;
-  background-color: color-mix(in srgb, #000 50%, var(--bg) 50%);
+  background-color: color-mix(in srgb, color-mix(in srgb, #000 50%, var(--bg) 50%) 82%, transparent);
   background-image:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.13) 1px, transparent 1px),
     linear-gradient(to right, rgba(255, 255, 255, 0.13) 1px, transparent 1px),
@@ -669,8 +672,8 @@ body.section-home .home-songs-sign {
   border: 2px solid #1c1c1c;
 }
 
-body.section-home .home-songs-sign::before,
-body.section-home .home-songs-sign::after {
+.home-songs-sign::before,
+.home-songs-sign::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -688,11 +691,11 @@ body.section-home .home-songs-sign::after {
   background-size: 3px 3px, 3px 3px, 3px 3px;
 }
 
-body.section-home .home-songs-sign::before {
-  opacity: 0.95;
+.home-songs-sign::before {
+  opacity: 0.82;
 }
 
-body.section-home .home-songs-sign::after {
+.home-songs-sign::after {
   background-image:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -704,10 +707,10 @@ body.section-home .home-songs-sign::after {
     );
   background-size: 3px 3px, 3px 3px, 3px 3px;
   background-position: 0 0, 0 0, 1.5px 1.5px;
-  opacity: 0.85;
+  opacity: 0.72;
 }
 
-body.section-home .home-songs-sign-text {
+.home-songs-sign-text {
   position: relative;
   z-index: 1;
   margin: 0;
@@ -907,15 +910,28 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   text-align: center;
 }
 
+.play-all-label-shadow {
+  display: inline-block;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
 #artists-sheet .play-all,
 #search-results .play-all {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   color: #fff;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 2px 12px rgba(0, 0, 0, 0.55);
+  text-shadow: var(--play-all-label-shadow);
+}
+
+html[data-family-theme="steff"] #manage-songs .play-all-label-shadow,
+html[data-family-theme="steff"] #manage-sheet .sheet-body > h1 {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  text-shadow: var(--play-all-label-shadow);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95))
+    drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8));
 }
 
 #artists-sheet .play-all::before,
