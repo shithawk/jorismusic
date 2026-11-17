@@ -3,7 +3,7 @@ const FAMILY_THEME_META = {
   jori: "#121a32",
   wayne: "#0d0d0d",
   jacob: "#1e2329",
-  dan: "#1a2332",
+  dan: "#1c2a34",
   steff: "#2d1f3d",
   zero: "#0a0a0a"
 };
@@ -106,17 +106,11 @@ function applyDeviceCopy() {
       : "Install Jori's Music: tap Share, then Add to Home Screen."
   );
   set("empty", "Tap + Add music to put songs " + on + ".");
-  set(
-    "mirror-hint",
-    deviceKind() === "iphone"
-      ? "To play on a TV or speaker, open Control Center, tap AirPlay, then choose the device."
-      : "To listen on the TV, swipe down from the top-right corner of the iPad, tap Screen Mirroring, then choose the TV."
-  );
-  set("from-ipad", "Choose a song saved " + on);
+  set("from-ipad", "Add a song saved on this device");
   set("manage-lede", "This takes a song off this " + deviceLabel() + ".");
   set("confirm-title", "Remove from this " + deviceLabel() + "?");
   set("artists-empty", "No songs " + on + " yet.");
-  set("videos-local-heading", onThisDevice().replace(/^on /, "On "));
+  set("videos-local-heading", "Stream");
   set("videos-empty", "No videos " + on + " yet.");
   const hintSub = document.querySelector("#install-hint .hint-sub");
   if (hintSub) hintSub.hidden = deviceKind() !== "iphone";
@@ -145,7 +139,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "41";
+const SW_BUILD = "45";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -311,6 +305,7 @@ async function init() {
         " could not open saved songs. Leave private browsing, then add Jori's Music to the Home Screen."
     );
   }
+  await mergeYouTubeCatalogFromMac();
   if (state.shuffle) startShuffle(state.currentId);
   render();
   refreshSavedLinks();
@@ -1137,6 +1132,43 @@ function openVideos() {
   renderVideos();
 }
 
+async function mergeYouTubeCatalogFromMac() {
+  let entries;
+  try {
+    const response = await fetch("/youtube-catalog.json", { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json();
+    entries = Array.isArray(payload) ? payload : [];
+  } catch {
+    return;
+  }
+  if (!entries.length) return;
+  let changed = false;
+  for (const entry of entries) {
+    const id = sanitizeYouTubeID(entry.videoId);
+    if (!id) continue;
+    if (state.tracks.some((track) => track.source === "youtube" && track.mediaRef === id)) continue;
+    const track = {
+      id: "youtube:" + id,
+      title: String(entry.title || "YouTube video").trim(),
+      artist: String(entry.artist || "").trim(),
+      source: "youtube",
+      mediaRef: id,
+      bytes: 0,
+      createdAt: Date.now()
+    };
+    try {
+      await putTrack(track);
+      state.tracks.push(track);
+      changed = true;
+    } catch { /* IndexedDB may be unavailable in a transient tab. */ }
+  }
+  if (!changed) return;
+  state.tracks = sortTracks(state.tracks);
+  render();
+  if (!document.getElementById("videos-sheet").hidden) renderVideos();
+}
+
 function renderVideos() {
   const sheet = document.getElementById("videos-sheet");
   if (!sheet || sheet.hidden) return;
@@ -1205,7 +1237,11 @@ async function searchYouTube() {
 }
 
 function renderYouTubeResults(results) {
-  const list = document.getElementById("youtube-results");
+  renderYouTubeVideoRows(document.getElementById("youtube-results"), results);
+}
+
+function renderYouTubeVideoRows(list, results) {
+  if (!list) return;
   list.replaceChildren();
   for (const video of results) {
     const saved = youtubeTrack(video.id);

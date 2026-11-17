@@ -1,4 +1,7 @@
 /* Family colour themes — accents and surfaces only (not images/icons). */
+html {
+  --nav-cream: #fff;
+}
 html[data-family-theme="jori"] {
   --bg: #121a32;
   --card: rgba(144, 176, 208, 0.12);
@@ -66,6 +69,16 @@ html.iphone[data-family-theme="wayne"] .top-nav-row > .home.is-current {
   box-shadow: inset 0 0 0 2px #000, 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
+html[data-family-theme="zero"] .top-nav-row > .home.is-current:not(.search-clear) {
+  background: linear-gradient(165deg, #444 0%, var(--zero-trans-play) 100%);
+  color: #fff;
+  box-shadow: inset 0 0 0 2px var(--zero-outline), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+html.iphone[data-family-theme="zero"] .top-nav-row > .home.is-current:not(.search-clear) {
+  box-shadow: inset 0 0 0 2px var(--zero-outline), 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
 html[data-family-theme="jacob"] {
   --bg: #1e2329;
   --card: rgba(160, 168, 178, 0.14);
@@ -83,11 +96,11 @@ html[data-family-theme="jacob"] {
 }
 
 html[data-family-theme="dan"] {
-  --bg: #1a2332;
+  --bg: #1c2a34;
   --card: rgba(160, 168, 178, 0.14);
   --notice-surface: color-mix(in srgb, var(--bg) 82%, var(--accent) 18%);
   --accent: #f0b429;
-  --accent-alt: #2db5a8;
+  --accent-alt: #4f9599;
   --accent-orange: #ff8800;
   --text: #f0eef8;
   --song-box-gradient: linear-gradient(
@@ -127,8 +140,8 @@ html[data-family-theme="zero"] {
     color-mix(in srgb, var(--bg) 90%, #fff 10%) 0%,
     color-mix(in srgb, var(--bg) 88%, #2e2e2e 12%) 100%
   );
-  --song-box-ring: #4a5884;
-  --zero-outline: #4a5884;
+  --song-box-ring: #5d6da8;
+  --zero-outline: #5d6da8;
   --zero-trans-fill: #7a7a7a;
   --zero-trans-lit: #ececec;
   --zero-trans-play: #525252;
@@ -138,6 +151,7 @@ html[data-family-theme="zero"] {
   --zero-btn-play: 92px;
   --zero-side-lift: 10px;
   --transport-bar: calc(96px + env(safe-area-inset-bottom));
+  --nav-cream: #fff;
 }
 
 html[data-family-theme="zero"] .theme-picker-label-stripe {
@@ -200,6 +214,21 @@ html[data-family-theme="zero"] #add-music {
     inset 0 -2px 4px rgba(0, 0, 0, 0.08),
     0 2px 0 rgba(0, 0, 0, 0.2),
     0 5px 9px rgba(0, 0, 0, 0.26);
+}
+
+html[data-family-theme="zero"] #download-all.big.prominent {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f4f4f4 42%,
+    #e8e8e8 100%
+  );
+  color: #000;
+  box-shadow: inset 0 0 0 1px var(--zero-outline);
+}
+
+html.iphone[data-family-theme="zero"] #download-all.big.prominent {
+  box-shadow: inset 0 0 0 2px var(--zero-outline);
 }
 
 html[data-family-theme="zero"] .now-stack {
@@ -627,7 +656,7 @@ html.iphone[data-family-theme="dan"] .transport #shuffle.is-on {
 }
 
 .theme-chip[data-theme="dan"] {
-  background: #2db5a8;
+  background: #4f9599;
   color: #fff;
 }
 
