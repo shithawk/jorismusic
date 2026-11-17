@@ -326,6 +326,7 @@ function bindEvents() {
   document.getElementById("artists").addEventListener("click", () => openArtists());
   document.getElementById("songs-nav").addEventListener("click", showSongs);
   document.getElementById("videos-nav").addEventListener("click", openVideos);
+  syncNavCurrent();
   document.getElementById("youtube-search-form").addEventListener("submit", (event) => {
     event.preventDefault();
     searchYouTube();
@@ -1011,9 +1012,10 @@ function showSearch(options) {
     hideConfirm();
     closePlayer();
     document.body.classList.remove("songs-page");
-    document.body.classList.add("search-page");
-    document.getElementById("songs").scrollTop = 0;
-  }
+  document.body.classList.add("search-page");
+  document.getElementById("songs").scrollTop = 0;
+  syncNavCurrent();
+}
   if (!typing) input.blur();
   renderSearchResults();
 }
@@ -1553,6 +1555,7 @@ function showSongs() {
   document.body.classList.remove("search-page");
   document.body.classList.add("songs-page");
   document.getElementById("songs").scrollTop = 0;
+  syncNavCurrent();
 }
 
 function goHome() {
@@ -1565,15 +1568,30 @@ function goHome() {
   document.body.classList.remove("songs-page");
   document.body.classList.remove("search-page");
   document.getElementById("songs").scrollTop = 0;
+  syncNavCurrent();
+}
+
+function syncNavCurrent() {
+  const artistsOpen = !document.getElementById("artists-sheet").hidden;
+  const videosOpen = !document.getElementById("videos-sheet").hidden;
+  const songsOpen = document.body.classList.contains("songs-page") && !artistsOpen && !videosOpen;
+  const searching = document.body.classList.contains("search-page") && !artistsOpen && !videosOpen && !songsOpen;
+  const current = artistsOpen ? "artists" : videosOpen ? "videos-nav" : songsOpen ? "songs-nav" : searching ? "" : "home";
+  for (const id of ["home", "artists", "songs-nav", "videos-nav"]) {
+    const button = document.getElementById(id);
+    if (button) button.classList.toggle("is-current", id === current);
+  }
 }
 
 function showSheet(id) {
   document.getElementById(id).hidden = false;
+  syncNavCurrent();
 }
 
 function hideSheet(id) {
   document.getElementById(id).hidden = true;
   if (id === "add-sheet") hideLinkConfirm();
+  syncNavCurrent();
 }
 
 function scrollSheetBodyToTop(sheetId) {
