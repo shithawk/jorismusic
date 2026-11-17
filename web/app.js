@@ -113,7 +113,6 @@ function applyDeviceCopy() {
   set("from-ipad", "Choose a song saved " + on);
   set("manage-lede", "This takes a song off this " + deviceLabel() + ".");
   set("confirm-title", "Remove from this " + deviceLabel() + "?");
-  set("confirm-detail", "The saved file will be deleted " + on + " only.");
   set("artists-empty", "No songs " + on + " yet.");
   set("videos-local-heading", onThisDevice().replace(/^on /, "On "));
   set("videos-empty", "No videos " + on + " yet.");
@@ -143,7 +142,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "40";
+const SW_BUILD = "41";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
