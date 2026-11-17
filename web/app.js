@@ -32,6 +32,8 @@ const state = {
   catalogSessionDownloads: new Set()
 };
 
+let zeroPlayPhase = 0;
+
 let dbPromise = null;
 const fileBlobs = new Map();
 const fileURLs = new Map();
@@ -121,6 +123,7 @@ function applyDeviceCopy() {
   document.documentElement.classList.toggle("iphone", compactPhoneLayout());
   document.documentElement.classList.toggle("ipad", deviceKind() === "ipad");
   updateShuffleButton();
+  updateZeroPlayButton();
 }
 let ytPlayer = null;
 let ytReady = false;
@@ -266,6 +269,11 @@ async function init() {
   window.addEventListener("resize", applyDeviceCopy);
   document.getElementById("install-hint").hidden = standalone();
   state.shuffle = loadShuffle();
+  if (isZeroTheme()) {
+    state.shuffle = false;
+    saveShuffle();
+    zeroPlayPhase = 0;
+  }
   bindEvents();
   bindMediaSession();
   audio().addEventListener("play", () => { if (isSource("local")) setPlaying(true); });
@@ -521,6 +529,10 @@ function bindEvents() {
   document.getElementById("previous").addEventListener("click", () => skip(-1));
   document.getElementById("next").addEventListener("click", () => skip(1));
   document.getElementById("play-button").addEventListener("click", () => {
+    if (isZeroTheme()) {
+      zeroPlayButtonClick();
+      return;
+    }
     if (isAudiblyPlaying()) userPause();
     else userPlay(currentTrack() || songToStart(), playerIsOpen());
   });
@@ -550,6 +562,7 @@ function render() {
   renderSearchResults();
   renderPlayer();
   updateShuffleButton();
+  updateZeroPlayButton();
   renderCatalog();
   renderArtists();
   renderVideos();
@@ -1415,9 +1428,12 @@ function setPlaying(playing) {
   state.playing = playing;
   if (playing) streamingHold = isStreamingTrack(currentTrack());
   else if (!appInBackground()) streamingHold = false;
-  document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
   const playButton = document.getElementById("play-button");
-  playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+  if (isZeroTheme()) updateZeroPlayButton();
+  else {
+    document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
+    playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+  }
   playButton.classList.toggle("is-playing", playing);
   if ("mediaSession" in navigator) {
     navigator.mediaSession.playbackState = playing ? "playing" : "paused";
@@ -2567,6 +2583,59 @@ function shuffleIds(ids) {
   return copy;
 }
 
+function isZeroTheme() {
+  return document.documentElement.getAttribute("data-family-theme") === "zero";
+}
+
+function zeroPlayButtonClick() {
+  const track = currentTrack() || songToStart();
+
+  if (isAudiblyPlaying()) {
+    if (!state.shuffle) {
+      setShuffle(true);
+      zeroPlayPhase = 2;
+    } else {
+      setShuffle(false);
+      userPause();
+      zeroPlayPhase = 0;
+    }
+    updateZeroPlayButton();
+    return;
+  }
+
+  if (zeroPlayPhase === 0) {
+    setShuffle(false);
+    if (track) userPlay(track, playerIsOpen());
+    zeroPlayPhase = 1;
+  } else if (zeroPlayPhase === 1) {
+    setShuffle(true);
+    if (track) userPlay(track, playerIsOpen());
+    zeroPlayPhase = 2;
+  } else {
+    setShuffle(false);
+    zeroPlayPhase = 0;
+  }
+  updateZeroPlayButton();
+}
+
+function updateZeroPlayButton() {
+  const playButton = document.getElementById("play-button");
+  if (!playButton) return;
+  if (!isZeroTheme()) {
+    playButton.classList.remove("is-shuffle-on");
+    return;
+  }
+  const playing = isAudiblyPlaying();
+  const shuffleVisual = state.shuffle && (playing || zeroPlayPhase >= 2);
+  playButton.classList.toggle("is-shuffle-on", shuffleVisual);
+  let label = "Play";
+  if (playing && state.shuffle) label = "Stop";
+  else if (playing) label = "Shuffle";
+  else if (zeroPlayPhase === 1) label = "Shuffle";
+  else if (zeroPlayPhase === 2) label = "Stop";
+  playButton.setAttribute("aria-label", label);
+}
+
 function setShuffle(on) {
   state.shuffle = on;
   state.shuffleHistory = [];
@@ -2574,6 +2643,7 @@ function setShuffle(on) {
   if (on) startShuffle(state.currentId);
   saveShuffle();
   updateShuffleButton();
+  updateZeroPlayButton();
 }
 
 function updateShuffleButton() {
@@ -3418,6 +3488,19 @@ function applyFamilyTheme(theme) {
     btn.classList.toggle("is-active", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
+  if (theme === "zero") {
+    zeroPlayPhase = 0;
+    if (state.shuffle) {
+      state.shuffle = false;
+      state.shuffleHistory = [];
+      state.shuffleRewind = false;
+      saveShuffle();
+    }
+  } else {
+    zeroPlayPhase = 0;
+  }
+  updateShuffleButton();
+  updateZeroPlayButton();
 }
 
 async function deleteTrack(id) {

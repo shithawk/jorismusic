@@ -37,7 +37,7 @@ body {
 }
 
 body.has-now {
-  --now-bar-space: 178px;
+  --now-bar-space: 168px;
   --transport-space: calc(var(--transport-bar) + var(--now-bar-space));
 }
 
@@ -401,9 +401,12 @@ body.has-now #songs { bottom: calc(var(--transport-bar) + var(--now-bar-space));
 }
 
 .big svg { fill: currentColor; }
-#play-button .icon-pause { display: none; }
+#play-button .icon-pause,
+#play-button .icon-shuffle { display: none; }
 #play-button.is-playing .icon-play { display: none; }
 #play-button.is-playing .icon-pause { display: block; }
+#play-button.is-playing.is-shuffle-on .icon-pause { display: none; }
+#play-button.is-playing.is-shuffle-on .icon-shuffle { display: block; }
 
 .empty {
   padding: 8px 24px 0;
@@ -897,7 +900,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
 
 .seek {
   position: relative;
-  height: 72px;
+  height: 62px;
   border-radius: 16px;
   background: rgba(8, 12, 24, 0.88);
   box-shadow: inset 0 0 0 2px rgba(90, 176, 196, 0.45);
@@ -906,7 +909,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   cursor: pointer;
 }
 
-.dock-seek { height: 76px; }
+.dock-seek { height: 66px; }
 
 .seek-fill {
   position: absolute;
@@ -922,9 +925,9 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   position: absolute;
   top: 50%;
   left: 0;
-  width: 40px;
-  height: 40px;
-  margin-left: -20px;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
   border: 3px solid var(--accent-alt);
   border-radius: 50%;
   background: var(--text);
@@ -1391,7 +1394,7 @@ html.iphone body:not(.search-page):not(.songs-page) #songs {
 }
 
 html.iphone body.has-now {
-  --now-bar-space: 98px;
+  --now-bar-space: 90px;
 }
 
 html.iphone .top-nav {
@@ -1707,7 +1710,7 @@ html.iphone .now-bar-song {
 }
 
 html.iphone .dock-seek {
-  height: 56px;
+  height: 48px;
 }
 
 html.iphone .seek-time {
@@ -1719,9 +1722,9 @@ html.iphone .seek-time.start {
 }
 
 html.iphone .seek-thumb {
-  width: 32px;
-  height: 32px;
-  margin-left: -16px;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
   border-width: 3px;
 }
 
