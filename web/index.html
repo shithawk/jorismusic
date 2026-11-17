@@ -43,7 +43,7 @@
   <link rel="icon" href="/favicon.ico?v=play1">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png?v=go1">
-  <link rel="stylesheet" href="/styles.css?v=124">
+  <link rel="stylesheet" href="/styles.css?v=129">
   <link rel="stylesheet" href="/themes.css?v=52">
 </head>
 <body>
@@ -66,7 +66,7 @@
           </button>
           <input id="nav-search-input" type="search" placeholder="Search" aria-label="Search" enterkeyhint="search" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
         </form>
-        <button id="search-clear" class="home search-clear" type="button">Clear</button>
+        <button id="search-clear" class="home search-clear is-empty" type="button" disabled>Clear</button>
       </div>
     </div>
   </div>
@@ -84,8 +84,8 @@
 
     <div class="actions home-only">
       <button id="play-favourites" class="big play-favourites" type="button" disabled>Select heart to add song to favourites</button>
-      <button id="add-music" class="big white" type="button">+ Add music</button>
-      <button id="manage-songs" class="big white" type="button" hidden>- Remove songs</button>
+      <button id="add-music" class="big prominent" type="button">+ Add music</button>
+      <button id="manage-songs" class="big plain" type="button" hidden>- Remove songs</button>
       <div class="theme-picker-wrap home-only">
         <p class="theme-picker-label" id="theme-picker-label">
           <span class="theme-picker-label-stripe" aria-hidden="true"></span>
@@ -278,6 +278,6 @@
     <button id="notice-action" class="notice-action" type="button" hidden>Open in YouTube</button>
   </div>
   <audio id="audio" playsinline preload="none"></audio>
-  <script src="/app.js?v=96" defer></script>
+  <script src="/app.js?v=98" defer></script>
 </body>
 </html>
