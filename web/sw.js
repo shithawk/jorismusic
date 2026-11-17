@@ -1,11 +1,11 @@
-const CACHE = "joris-shell-v192";
+const CACHE = "joris-shell-v195";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=151",
+  "/styles.css?v=163",
   "/themes.css",
-  "/themes.css?v=104",
+  "/themes.css?v=114",
   "/app.js",
   "/app.js?v=108",
   "/heroes/jori.jpg",
