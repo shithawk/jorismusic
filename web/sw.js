@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v190";
+const CACHE = "joris-shell-v192";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=137",
+  "/styles.css?v=151",
   "/themes.css",
-  "/themes.css?v=83",
+  "/themes.css?v=104",
   "/app.js",
-  "/app.js?v=107",
+  "/app.js?v=108",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -20,7 +20,7 @@ const SHELL = [
   "/heroes/steffBW.jpg",
   "/manifest.webmanifest",
   "/favicon.ico?v=play1",
-  "/youtube-logo.png",
+  "/youtube-logo.png?v=jyt1",
   "/go.jpg",
   "/icon-180.png?v=go1",
   "/icon-512.png"
