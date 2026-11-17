@@ -199,8 +199,8 @@ body.search-page #search-page {
   margin-top: 28px;
 }
 
-#search-results .song,
 #search-results .artist-row { margin-top: 0; }
+#search-results > .song { margin-top: 12px; }
 
 .home {
   position: relative;
@@ -756,7 +756,8 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
   text-align: center;
 }
 
-#artists-sheet .play-all {
+#artists-sheet .play-all,
+#search-results .play-all {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -766,7 +767,8 @@ input::placeholder { color: rgba(255, 255, 255, 0.72); }
     0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
-#artists-sheet .play-all::before {
+#artists-sheet .play-all::before,
+#search-results .play-all::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -1840,7 +1842,8 @@ html.iphone .play-all {
   border-radius: 12px;
 }
 
-html.iphone #artists-sheet .play-all::before {
+html.iphone #artists-sheet .play-all::before,
+html.iphone #search-results .play-all::before {
   width: min(95%, 5.5rem);
   height: 145%;
   opacity: 0.3;
