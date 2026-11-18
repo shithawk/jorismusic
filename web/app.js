@@ -139,7 +139,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "67";
+const SW_BUILD = "71";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -285,6 +285,10 @@ async function init() {
     step(1);
   });
   document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      skipStreamingWhenBackgrounded();
+      return;
+    }
     if (!streamingHold) return;
     resumeStreaming();
   });
@@ -1756,6 +1760,15 @@ function isStreamingTrack(track) {
 
 function shouldSkipStreamingTrack(track) {
   return isStreamingTrack(track) && streamingPlaybackUnavailable();
+}
+
+
+function skipStreamingWhenBackgrounded() {
+  const track = currentTrack();
+  if (!isStreamingTrack(track)) return;
+  if (!state.playing && !streamingHold) return;
+  // Phone minimize / background stops embedded YouTube & SoundCloud — continue with a local song.
+  advancePastStreamingFailure();
 }
 
 function resumeStreaming() {

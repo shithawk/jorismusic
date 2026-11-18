@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v276";
+const CACHE = "joris-shell-v280";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=197",
+  "/styles.css?v=199",
   "/themes.css",
   "/themes.css?v=163",
   "/app.js",
-  "/app.js?v=126",
+  "/app.js?v=130",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -19,11 +19,14 @@ const SHELL = [
   "/heroes/steff.jpg",
   "/heroes/steffBW.jpg",
   "/manifest.webmanifest",
+  "/manifest.webmanifest?v=jm2",
   "/favicon.ico?v=play1",
   "/youtube-logo.png?v=jyt1",
   "/go.jpg",
-  "/icon-180.png?v=go1",
-  "/icon-512.png"
+  "/icon-180.png?v=jm2",
+  "/icon-192.png?v=jm2",
+  "/icon-512.png?v=jm2",
+  "/icon-512-maskable.png?v=jm2"
 ];
 
 self.addEventListener("install", (event) => {
