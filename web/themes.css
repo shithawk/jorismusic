@@ -229,6 +229,7 @@ html[data-family-theme="zero"] {
   --zero-btn-shuffle: 46px;
   --zero-btn-play: 90px;
   --zero-side-lift: 8px;
+  --zero-row-nudge: 12px;
   --transport-bar: calc(104px + env(safe-area-inset-bottom));
   --nav-cream: #fff;
   --nav-glass-current-text: #f2f5fa;
@@ -421,6 +422,8 @@ html[data-family-theme="zero"] .transport {
     );
   background: var(--bg);
   box-shadow: none;
+  margin-left: calc(var(--zero-row-nudge) * -1);
+  width: calc(100% + var(--zero-row-nudge));
 }
 
 html[data-family-theme="zero"] .transport #shuffle,
@@ -430,7 +433,11 @@ html[data-family-theme="zero"] .transport #next {
   bottom: auto;
   left: auto;
   right: auto;
-  margin-bottom: var(--zero-side-lift);
+}
+
+html[data-family-theme="zero"] .transport #previous,
+html[data-family-theme="zero"] .transport #next {
+  margin-bottom: calc(var(--zero-side-lift) + 6px);
 }
 
 html[data-family-theme="zero"] .transport .big {
@@ -483,7 +490,7 @@ html[data-family-theme="zero"] .transport #shuffle {
   max-height: var(--zero-btn-shuffle);
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: calc(var(--zero-side-lift) + (var(--zero-btn-side) - var(--zero-btn-shuffle)) / 2 + 6px);
+  margin-bottom: calc(var(--zero-side-lift) + (var(--zero-btn-side) - var(--zero-btn-shuffle)) / 2 + 5px);
   align-self: flex-end;
 }
 
@@ -504,7 +511,7 @@ html[data-family-theme="zero"] .transport #play-button {
   min-width: var(--zero-btn-play);
   max-width: var(--zero-btn-play);
   max-height: var(--zero-btn-play);
-  margin-bottom: 0;
+  margin-bottom: 6px;
 }
 
 html[data-family-theme="zero"] .transport #play-button svg {

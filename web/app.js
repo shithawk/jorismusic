@@ -139,7 +139,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "58";
+const SW_BUILD = "60";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -202,11 +202,12 @@ function setMarqueeText(host, text, stamp) {
   if (!host) return;
   const next = text || "";
   const key = stamp === undefined ? next : String(stamp) + "\0" + next;
-  if (marqueeText.get(host) === key) return;
-  marqueeText.set(host, key);
   const inner = ensureMarqueeHost(host);
   if (!inner) return;
+  if (marqueeText.get(host) === key && inner.textContent === next) return;
+  marqueeText.set(host, key);
   inner.textContent = next;
+  inner.style.transform = "";
   requestAnimationFrame(() => {
     requestAnimationFrame(() => refreshMarquee(host));
   });
@@ -700,8 +701,8 @@ function presentVideosSheet() {
   scrollSheetBodyToTop("videos-sheet");
 }
 
-function syncVideosInlinePlayer() {
-  const track = currentTrack();
+function syncVideosInlinePlayer(trackOverride) {
+  const track = trackOverride || currentTrack();
   const use =
     state.videosInline && videosSheetIsOpen() && Boolean(track && isStreamingTrack(track));
   const now = document.getElementById("videos-now");
@@ -711,8 +712,10 @@ function syncVideosInlinePlayer() {
   if (!now || !host || !scroll || !stage) return;
   if (use) {
     now.hidden = false;
-    setMarqueeText(document.getElementById("videos-now-title"), track.title, track.id);
-    setMarqueeText(document.getElementById("videos-now-sub"), subtitle(track), track.id + ":sub");
+    const label = nowLabel(track);
+    setMarqueeText(document.getElementById("videos-now-title"), label, track.id + ":" + label);
+    setMarqueeText(document.getElementById("videos-now-sub"), subtitle(track), track.id + ":sub:" + subtitle(track));
+    setNowBarMarquee(state.playing, label);
     if (stage.parentElement !== host) host.append(stage);
     closePlayer();
     requestAnimationFrame(() => {
@@ -1037,22 +1040,35 @@ function playListed(id, options) {
   const track = state.tracks.find((item) => item.id === id);
   if (!track) return;
   const keepQueue = Boolean(options && options.keepQueue);
+  const videosInline = isVideoTrack(track) && !keepQueue;
   if (!keepQueue) state.artistQueue = null;
-  state.videosInline = false;
-  if (track.source !== "local") {
-    hideSheet("artists-sheet");
-    hideSheet("videos-sheet");
+  if (track.source !== "local") hideSheet("artists-sheet");
+  if (videosInline) {
+    state.videosInline = true;
+    state.videosScrollToTop = true;
     hideSheet("add-sheet");
     hideSheet("manage-sheet");
     hideConfirm();
     document.body.classList.remove("search-page");
     document.body.classList.remove("songs-page");
+    if (!videosSheetIsOpen()) presentVideosSheet();
+    syncVideosInlinePlayer(track);
+  } else {
+    state.videosInline = false;
+    if (track.source !== "local") hideSheet("videos-sheet");
   }
   if (!keepQueue && track.id === state.currentId && isAudiblyPlaying()) {
+    if (videosInline) {
+      state.videosScrollToTop = true;
+      renderVideos();
+      scrollSheetBodyToTop("videos-sheet");
+      return;
+    }
     if (track.source !== "local") openPlayer();
     return;
   }
-  userPlay(track, track.source !== "local");
+  userPlay(track, !videosInline && track.source !== "local");
+  if (videosInline) scrollSheetBodyToTop("videos-sheet");
 }
 
 function openArtists(name) {
@@ -1199,8 +1215,10 @@ function searchHeading(text) {
 }
 
 function openVideos() {
-  state.videosInline = false;
   presentVideosSheet();
+  const track = currentTrack();
+  state.videosInline = isVideoTrack(track);
+  if (!state.videosInline) closePlayer();
   syncVideosInlinePlayer();
 }
 
@@ -1259,6 +1277,7 @@ function renderVideos() {
     if (jumpTop) state.videosScrollToTop = false;
   }
   syncVideosInlinePlayer();
+  if (jumpTop && scroller) scroller.scrollTop = 0;
 }
 
 function setVideoSearchStatus(text) {
@@ -1779,7 +1798,12 @@ function scrollSheetBodyToTop(sheetId) {
   const sheet = document.getElementById(sheetId);
   if (!sheet) return;
   const body = sheet.querySelector(".sheet-body");
-  if (body) body.scrollTop = 0;
+  if (!body) return;
+  const pin = () => {
+    body.scrollTop = 0;
+  };
+  pin();
+  requestAnimationFrame(pin);
 }
 
 function playerIsOpen() {
