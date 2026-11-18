@@ -511,10 +511,21 @@ body.has-now #songs { bottom: calc(var(--transport-bar) + var(--now-bar-space));
 
 .actions > #play-favourites,
 .actions > #add-music,
-.actions > #manage-songs {
+.actions > #manage-songs,
+.home-actions > #play-favourites,
+.home-actions > #add-music,
+.home-actions > #manage-songs {
   width: 80%;
   max-width: 80%;
   align-self: center;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: inherit;
+  width: 100%;
 }
 
 .big:active:not(:disabled) { opacity: 0.65; }
@@ -967,6 +978,52 @@ html[data-family-theme="steff"] #manage-sheet .sheet-body > h1 {
 .artist-songs { margin: 4px 0 8px 12px; }
 .artist-songs .song { margin-top: 8px; }
 
+#artists-sheet .artist-row.open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#artists-sheet .artist-row + .artist-row,
+#artists-sheet .artist-songs + .artist-row {
+  margin-top: 28px;
+}
+
+html.iphone #artists-sheet .artist-row + .artist-row,
+html.iphone #artists-sheet .artist-songs + .artist-row {
+  margin-top: 22px;
+}
+
+#artists-sheet .artist-songs {
+  margin: 0;
+}
+
+#artists-sheet .artist-songs .song {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+#artists-sheet .artist-songs .song::before {
+  border-radius: 0;
+}
+
+#artists-sheet .artist-songs .song:last-child {
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+#artists-sheet .artist-songs .song:last-child::before {
+  border-bottom-left-radius: 16px;
+}
+
+html.iphone #artists-sheet .artist-songs .song:last-child {
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+html.iphone #artists-sheet .artist-songs .song:last-child::before {
+  border-bottom-left-radius: 12px;
+}
+
 .song-title { font-size: calc(1.7rem - 1pt); font-weight: 700; }
 .song-sub { font-size: calc(1.25rem - 1pt); }
 .song.current .song-sub { color: rgba(0, 0, 0, 0.8); }
@@ -1301,6 +1358,8 @@ html.iphone #player-sub { font-size: 0.88rem; }
 html:not([data-family-theme="zero"]) .transport {
   align-items: center;
   grid-template-columns: 0.92fr 1.22fr 0.92fr 0.94fr;
+  padding-left: 26px;
+  padding-right: 6px;
 }
 
 html.iphone .transport {
@@ -1412,8 +1471,11 @@ html:not([data-family-theme="zero"]) .transport #play-button {
 }
 
 html:not([data-family-theme="zero"]) .transport #shuffle {
+  width: 4.6rem;
+  max-width: 4.6rem;
   min-height: 62px;
   padding: 2px 4px 4px;
+  justify-self: center;
   align-self: center;
 }
 
@@ -1947,6 +2009,8 @@ html.iphone .transport {
 
 html.iphone:not([data-family-theme="zero"]) .transport {
   align-items: center;
+  padding-left: 18px;
+  padding-right: 0;
 }
 
 html.iphone .transport .big:active:not(:disabled) {
@@ -2030,6 +2094,8 @@ html.iphone:not([data-family-theme="zero"]) .transport #play-button {
 }
 
 html.iphone:not([data-family-theme="zero"]) .transport #shuffle {
+  width: 3.35rem;
+  max-width: 3.35rem;
   min-height: 46px;
   padding: 1px 2px 3px;
   align-self: center;
@@ -2361,6 +2427,8 @@ html.iphone .transport #play-button.is-playing:active:not(:disabled) {
     justify-content: center;
     align-items: center;
     gap: 6px;
+    padding-left: 18px;
+    padding-right: 0;
   }
 
   html:not(.ipad):not([data-family-theme="zero"]) .transport .big {
@@ -2377,6 +2445,8 @@ html.iphone .transport #play-button.is-playing:active:not(:disabled) {
   }
 
   html:not(.ipad):not([data-family-theme="zero"]) .transport #shuffle {
+    width: 3.35rem;
+    max-width: 3.35rem;
     min-height: 46px;
     padding: 1px 2px 3px;
     align-self: center;

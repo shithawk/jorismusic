@@ -135,6 +135,19 @@ html[data-family-theme="jacob"] body.songs-page #songs {
   background-attachment: fixed;
 }
 
+html[data-family-theme="jacob"] body.section-home .home-actions {
+  margin: 0 -8px;
+  padding: 14px 8px;
+  border-radius: 22px;
+  background: #14212a;
+}
+
+html.iphone[data-family-theme="jacob"] body.section-home .home-actions {
+  margin: 0 -4px;
+  padding: 10px 4px;
+  border-radius: 16px;
+}
+
 html[data-family-theme="dan"] {
   --bg: #1c2a34;
   --card: rgba(160, 168, 178, 0.14);
