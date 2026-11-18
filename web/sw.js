@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v245";
+const CACHE = "joris-shell-v251";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=184",
+  "/styles.css?v=188",
   "/themes.css",
-  "/themes.css?v=150",
+  "/themes.css?v=152",
   "/app.js",
-  "/app.js?v=115",
+  "/app.js?v=117",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -95,17 +95,28 @@ self.addEventListener("fetch", (event) => {
   }
 
   const request = event.request;
+  const networkFirst =
+    request.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname === "/index.html" ||
+    url.pathname === "/styles.css" ||
+    url.pathname === "/themes.css" ||
+    url.pathname === "/app.js" ||
+    url.pathname === "/manifest.webmanifest";
   event.respondWith((async () => {
+    if (networkFirst) {
+      const fresh = await refreshShell(request);
+      if (fresh) return fresh;
+    }
     const cached = await cachedShell(request);
     if (cached) return cached;
-    const fresh = await refreshShell(request);
-    if (fresh) return fresh;
+    if (!networkFirst) {
+      const fresh = await refreshShell(request);
+      if (fresh) return fresh;
+    }
     if (request.mode === "navigate") {
       return (await caches.match("/index.html")) || (await caches.match("/")) || offlineResponse();
     }
     return offlineResponse();
-  })());
-  event.waitUntil((async () => {
-    if (await cachedShell(request)) await refreshShell(request);
   })());
 });

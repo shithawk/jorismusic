@@ -1284,6 +1284,7 @@ html.iphone #player-sub { font-size: 0.88rem; }
 
 
 .transport {
+  --transport-label: 1.23rem;
   position: fixed;
   left: 0;
   right: 0;
@@ -1301,6 +1302,10 @@ html:not([data-family-theme="zero"]) .transport {
   align-items: center;
 }
 
+html.iphone .transport {
+  --transport-label: 0.8rem;
+}
+
 .transport .big {
   display: flex;
   flex-direction: column;
@@ -1308,12 +1313,25 @@ html:not([data-family-theme="zero"]) .transport {
   justify-content: center;
   min-height: 96px;
   padding: 8px 4px 12px;
-  font-size: 1.23rem;
+  font-size: var(--transport-label);
   line-height: 1.12;
   border-radius: 14px;
   overflow: visible;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
   color: #fff;
+  gap: 2px;
+}
+
+html:not([data-family-theme="zero"]) .transport .big > span,
+html:not([data-family-theme="zero"]) .transport #play-label {
+  font-size: var(--transport-label);
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+html.iphone:not([data-family-theme="zero"]) .transport .big > span,
+html.iphone:not([data-family-theme="zero"]) .transport #play-label {
+  line-height: 1.05;
 }
 
 .transport .big svg {
@@ -1385,6 +1403,12 @@ html:not([data-family-theme="zero"]) .transport {
   filter:
     drop-shadow(0 0 0.4px currentColor)
     drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+}
+
+html:not([data-family-theme="zero"]) .transport #shuffle {
+  min-height: 76px;
+  padding: 4px 4px 6px;
+  align-self: center;
 }
 
 .transport #shuffle.is-on #shuffle-label {
@@ -1941,7 +1965,7 @@ html.iphone .transport .big {
   min-height: 56px;
   padding: 5px 2px 8px;
   border-radius: 14px;
-  font-size: 0.8rem;
+  font-size: var(--transport-label);
   gap: 2px;
   line-height: 1.12;
   overflow: visible;
@@ -1984,6 +2008,12 @@ html.iphone .transport #shuffle.is-on {
     0 0 16px color-mix(in srgb, var(--shuffle-on-surface) 34%, transparent),
     0 4px 0 rgba(0, 0, 0, 0.4),
     0 6px 12px rgba(0, 0, 0, 0.46);
+}
+
+html.iphone:not([data-family-theme="zero"]) .transport #shuffle {
+  min-height: 44px;
+  padding: 2px 2px 4px;
+  align-self: center;
 }
 
 html.iphone .transport .big svg {
@@ -2174,10 +2204,16 @@ html.iphone #search-results > .search-results-label:first-of-type {
   margin-top: 2px;
 }
 
+html:not([data-family-theme="zero"]) .transport #play-button.big.prominent,
 html:not([data-family-theme="zero"]) .transport #play-button #play-label {
-  font-size: inherit;
-  font-weight: inherit;
-  line-height: inherit;
+  font-size: var(--transport-label);
+  font-weight: 700;
+  gap: 2px;
+}
+
+html.iphone:not([data-family-theme="zero"]) .transport #play-button.big.prominent,
+html.iphone:not([data-family-theme="zero"]) .transport #play-button #play-label {
+  font-size: var(--transport-label);
 }
 
 .transport #play-button:not(.is-playing) {
@@ -2306,6 +2342,12 @@ html.iphone .transport #play-button.is-playing:active:not(:disabled) {
     flex: 0 0 auto;
     width: min(4.25rem, 21vw);
     max-width: 4.25rem;
+  }
+
+  html:not(.ipad):not([data-family-theme="zero"]) .transport #shuffle {
+    min-height: 44px;
+    padding: 2px 2px 4px;
+    align-self: center;
   }
 
 }

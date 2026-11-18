@@ -226,6 +226,7 @@ html[data-family-theme="zero"] {
   --zero-trans-gap: 52px;
   --zero-trans-pad: 14px;
   --zero-btn-side: 62px;
+  --zero-btn-shuffle: 46px;
   --zero-btn-play: 90px;
   --zero-side-lift: 8px;
   --transport-bar: calc(104px + env(safe-area-inset-bottom));
@@ -474,6 +475,25 @@ html[data-family-theme="zero"] .transport .big.prominent {
   box-shadow: var(--zero-trans-blue-glow);
 }
 
+html[data-family-theme="zero"] .transport #shuffle {
+  width: var(--zero-btn-shuffle);
+  height: var(--zero-btn-shuffle);
+  min-width: var(--zero-btn-shuffle);
+  max-width: var(--zero-btn-shuffle);
+  max-height: var(--zero-btn-shuffle);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: calc(var(--zero-side-lift) + (var(--zero-btn-side) - var(--zero-btn-shuffle)) / 2 + 6px);
+  align-self: flex-end;
+}
+
+html[data-family-theme="zero"] .transport #shuffle svg {
+  width: 24px;
+  height: 24px;
+  transform: none;
+  display: block;
+}
+
 html[data-family-theme="zero"] .transport #play-button {
   position: relative;
   left: auto;
@@ -560,6 +580,7 @@ html.iphone[data-family-theme="zero"] {
   --zero-trans-gap: 14px;
   --zero-trans-pad: 10px;
   --zero-btn-side: 42px;
+  --zero-btn-shuffle: 32px;
   --zero-btn-play: 62px;
   --zero-side-lift: 6px;
 }
@@ -594,6 +615,11 @@ html.iphone[data-family-theme="zero"] .transport .big svg {
   height: 22px;
 }
 
+html.iphone[data-family-theme="zero"] .transport #shuffle svg {
+  width: 16px;
+  height: 16px;
+}
+
 html.iphone[data-family-theme="zero"] .transport #play-button .icon-play,
 html.iphone[data-family-theme="zero"] .transport #play-button .icon-pause {
   width: 32px;
@@ -606,6 +632,7 @@ html.iphone[data-family-theme="zero"] .transport #play-button .icon-pause {
     --zero-trans-gap: 14px;
     --zero-trans-pad: 10px;
     --zero-btn-side: 42px;
+    --zero-btn-shuffle: 32px;
     --zero-btn-play: 62px;
     --zero-side-lift: 6px;
   }
@@ -613,6 +640,11 @@ html.iphone[data-family-theme="zero"] .transport #play-button .icon-pause {
   html[data-family-theme="zero"]:not(.ipad) .transport .big svg {
     width: 22px;
     height: 22px;
+  }
+
+  html[data-family-theme="zero"]:not(.ipad) .transport #shuffle svg {
+    width: 16px;
+    height: 16px;
   }
 
   html[data-family-theme="zero"]:not(.ipad) .transport #play-button .icon-play,

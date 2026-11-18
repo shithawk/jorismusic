@@ -139,7 +139,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "55";
+const SW_BUILD = "58";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -310,6 +310,7 @@ async function init() {
   setInterval(() => {
     if (!state.currentId || seekHold) return;
     if (pendingSeek) applyPendingSeek();
+    syncPlaybackChrome();
     refreshSeek();
   }, 400);
 }
@@ -851,6 +852,30 @@ function applyPendingSeek() {
   commitSeek(track, pending.ratio, true);
 }
 
+function youtubePlayerState() {
+  if (!ytPlayer || !ytPlayer.getPlayerState || !window.YT) return null;
+  try {
+    return ytPlayer.getPlayerState();
+  } catch {
+    return null;
+  }
+}
+
+function syncPlaybackChrome() {
+  const track = currentTrack();
+  if (!track || ignoreAdvance || pendingYtPlay) return;
+  if (track.source !== "youtube") return;
+  const playerState = youtubePlayerState();
+  if (playerState == null || !window.YT) return;
+  if (playerState === YT.PlayerState.PLAYING) {
+    if (!state.playing) setPlaying(true);
+    return;
+  }
+  if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.ENDED) {
+    if (state.playing && !(streamingHold && appInBackground())) setPlaying(false);
+  }
+}
+
 function refreshSeek() {
   if (seekHold) return;
   const track = currentTrack();
@@ -1012,40 +1037,22 @@ function playListed(id, options) {
   const track = state.tracks.find((item) => item.id === id);
   if (!track) return;
   const keepQueue = Boolean(options && options.keepQueue);
-  const videosInline = isVideoTrack(track) && !keepQueue;
   if (!keepQueue) state.artistQueue = null;
-  if (track.source !== "local") hideSheet("artists-sheet");
-  if (videosInline) {
-    state.videosInline = true;
-    state.videosScrollToTop = true;
-    if (videosSheetIsOpen()) {
-      hideSheet("add-sheet");
-      hideSheet("manage-sheet");
-      hideSheet("artists-sheet");
-      hideConfirm();
-      document.body.classList.remove("search-page");
-      document.body.classList.remove("songs-page");
-      renderVideos();
-      scrollSheetBodyToTop("videos-sheet");
-    } else {
-      presentVideosSheet();
-    }
-  } else {
-    state.videosInline = false;
-    if (track.source !== "local") hideSheet("videos-sheet");
+  state.videosInline = false;
+  if (track.source !== "local") {
+    hideSheet("artists-sheet");
+    hideSheet("videos-sheet");
+    hideSheet("add-sheet");
+    hideSheet("manage-sheet");
+    hideConfirm();
+    document.body.classList.remove("search-page");
+    document.body.classList.remove("songs-page");
   }
-  if (!keepQueue && track.id === state.currentId && state.playing) {
-    if (videosInline) {
-      state.videosScrollToTop = true;
-      syncVideosInlinePlayer();
-      renderVideos();
-      scrollSheetBodyToTop("videos-sheet");
-      return;
-    }
+  if (!keepQueue && track.id === state.currentId && isAudiblyPlaying()) {
     if (track.source !== "local") openPlayer();
     return;
   }
-  userPlay(track, !videosInline && track.source !== "local");
+  userPlay(track, track.source !== "local");
 }
 
 function openArtists(name) {
@@ -1192,10 +1199,8 @@ function searchHeading(text) {
 }
 
 function openVideos() {
+  state.videosInline = false;
   presentVideosSheet();
-  const track = currentTrack();
-  state.videosInline = isVideoTrack(track);
-  if (!state.videosInline) closePlayer();
   syncVideosInlinePlayer();
 }
 
@@ -2460,6 +2465,7 @@ async function playTrack(track, options) {
   const player = audio();
   const started = track.source === "local" && player.src === fileURLs.get(track.id) && !player.paused && !player.error;
   state.playing = Boolean(started);
+  if (!started) paintSeek(0, 0);
   if (track.source === "local") closePlayer();
   else if (open) openPlayer();
   else if (state.videosInline) {
@@ -2490,6 +2496,20 @@ function isAudiblyPlaying() {
   const track = currentTrack();
   if (!track) return false;
   if (track.source === "local") return realSource(audio()) && !audio().paused;
+  if (track.source === "youtube") {
+    const playerState = youtubePlayerState();
+    if (playerState != null && window.YT) {
+      if (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING) return true;
+      if (
+        playerState === YT.PlayerState.PAUSED ||
+        playerState === YT.PlayerState.ENDED ||
+        playerState === YT.PlayerState.CUED ||
+        playerState === YT.PlayerState.UNSTARTED
+      ) {
+        return false;
+      }
+    }
+  }
   return state.playing;
 }
 
@@ -2511,8 +2531,8 @@ function userPause() {
 function userPlay(track, open) {
   if (!track) return;
   beginTrackChange();
-  pauseYouTube();
-  pauseSoundCloud();
+  if (track.source !== "youtube") pauseYouTube();
+  if (track.source !== "soundcloud") pauseSoundCloud();
   const show =
     open === false ? false : Boolean(open || track.source !== "local");
   const player = audio();
@@ -2550,7 +2570,7 @@ function skip(direction) {
       restart();
       return;
     }
-    userPlay(track, videosInlinePlayback() ? false : playerIsOpen());
+    userPlay(track, videosInlinePlayback() ? false : playerIsOpen() || track.source !== "local");
     return;
   }
   const track = trackForStep(direction);
@@ -2560,7 +2580,7 @@ function skip(direction) {
     restart();
     return;
   }
-  userPlay(track, videosInlinePlayback() ? false : playerIsOpen());
+  userPlay(track, videosInlinePlayback() ? false : playerIsOpen() || track.source !== "local");
 }
 
 function realSource(player) {
@@ -2902,6 +2922,7 @@ async function playSoundCloud(track) {
   });
   scWidget.bind(window.SC.Widget.Events.PAUSE, () => {
     if (!isSource("soundcloud")) return;
+    if (ignoreAdvance) return;
     if (streamingHold && appInBackground()) return;
     setPlaying(false);
   });
@@ -2974,13 +2995,16 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
           }
         }
         if (event.data === YT.PlayerState.PAUSED) {
+          if (pendingYtPlay || ignoreAdvance) return;
           if (streamingHold && appInBackground()) return;
           setPlaying(false);
         }
         if (event.data === YT.PlayerState.ENDED && youtubeActuallyEnded(event)) step(1);
       },
       onError: (event) => {
+        pendingYtPlay = false;
         finishTrackChange();
+        setPlaying(false);
         noticeYouTubePlaybackError(event && event.data);
       }
     }
