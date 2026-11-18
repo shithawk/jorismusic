@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v271";
+const CACHE = "joris-shell-v276";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=196",
+  "/styles.css?v=197",
   "/themes.css",
-  "/themes.css?v=162",
+  "/themes.css?v=163",
   "/app.js",
-  "/app.js?v=121",
+  "/app.js?v=126",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -89,7 +89,8 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/sw.js" ||
     url.pathname.startsWith("/music/") ||
     url.pathname.startsWith("/api/") ||
-    url.pathname === "/catalog.json"
+    url.pathname === "/catalog.json" ||
+    url.pathname === "/youtube-catalog.json"
   ) {
     return;
   }

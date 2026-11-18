@@ -1,0 +1,26 @@
+# Jori's YouTube list (blank lines and # comments are ignored).
+#
+# URL only (tries YouTube for titles; often shows "YouTube video" offline):
+#   https://www.youtube.com/watch?v=VIDEO_ID
+#
+# Recommended — you set song + artist (no network needed):
+#   Artist - Song title | https://www.youtube.com/watch?v=VIDEO_ID
+#
+# Or URL first:
+#   https://www.youtube.com/watch?v=VIDEO_ID | Artist | Song title
+#
+# Or tab-separated:
+#   https://www.youtube.com/watch?v=VIDEO_ID	Artist	Song title
+#
+# Rebuild after editing:
+#   bash scripts/make-youtube-catalog.sh
+#
+# Videos → "From the computer" in Jori's Music. Tap Add to save on the device.
+
+Boards Of Canada - All Full Albums | https://www.youtube.com/watch?v=Fr_-tXJfSww
+
+Sufjan Stevens - To Be Alone With You | https://www.youtube.com/watch?v=N3zu9NucyBg
+
+Sufjan Stevens - All the Trees of the Field Will Clap Their Hands | https://www.youtube.com/watch?v=JHul8vzXsV8
+
+Sufjan Stevens - Concerning the UFO sighting near Highland, Illinois | https://www.youtube.com/watch?v=p_tcyQbfRo8&list=OLAK5uy_mvDMUbRUk-QGWlDE2O6SLwuKxyQr_3t44&index=1

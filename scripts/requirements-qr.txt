@@ -1,0 +1,2 @@
+# Tailscale / guest install QR PNGs (scripts/ensure-qrcode.sh).
+qrcode[pil]>=7.4
