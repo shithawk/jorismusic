@@ -135,17 +135,25 @@ html[data-family-theme="jacob"] body.songs-page #songs {
   background-attachment: fixed;
 }
 
-html[data-family-theme="jacob"] body.section-home .home-actions {
+body.section-home .home-actions {
   margin: 0 -8px;
   padding: 14px 8px;
   border-radius: 22px;
-  background: #14212a;
+  background: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--bg) 82%, var(--accent-alt) 18%) 50%,
+    color-mix(in srgb, var(--bg) 58%, #000 42%) 50%
+  );
 }
 
-html.iphone[data-family-theme="jacob"] body.section-home .home-actions {
+html.iphone body.section-home .home-actions {
   margin: 0 -4px;
   padding: 10px 4px;
   border-radius: 16px;
+}
+
+html[data-family-theme="jacob"] body.section-home .home-actions {
+  background: #14212a;
 }
 
 html[data-family-theme="dan"] {
@@ -880,7 +888,7 @@ body.section-home #finder {
 }
 
 .theme-chip[data-theme="wayne"] {
-  background: #d4b422;
+  background: #c4a41c;
   color: #db141a;
 }
 
@@ -909,7 +917,10 @@ html[data-family-theme="zero"] .theme-chip.is-active {
   background: linear-gradient(180deg, var(--zero-trans-lit) 0%, var(--zero-trans-fill) 100%);
   color: #101010;
   text-shadow: none;
-  box-shadow: inset 0 0 0 2px var(--zero-outline), 0 0 14px rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 0 0 2px var(--zero-outline),
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 18px rgba(255, 255, 255, 0.28);
 }
 
 html.iphone .theme-picker-wrap {

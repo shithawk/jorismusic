@@ -1246,7 +1246,7 @@ html.iphone #artists-sheet .artist-songs .song:last-child::before {
   max-height: 100dvh;
   overflow: hidden;
   background: var(--bg);
-  opacity: 0;
+  opacity: 1;
   visibility: hidden;
   pointer-events: none;
 }
@@ -1258,8 +1258,25 @@ html.iphone #artists-sheet .artist-songs .song:last-child::before {
   pointer-events: auto;
 }
 
+#player.stage-inline {
+  z-index: 9;
+  overflow: visible;
+}
+
+#player.stage-inline .stage.stage-floating {
+  visibility: visible;
+  pointer-events: auto;
+  position: fixed;
+  margin: 0;
+}
+
 #player:not(.open) iframe {
   pointer-events: none;
+}
+
+#player:not(.open) .stage.stage-floating,
+#player:not(.open) .stage.stage-floating iframe {
+  pointer-events: auto;
 }
 
 .player-scroll {
@@ -1576,6 +1593,7 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
 
 .videos-stage-host {
   width: 100%;
+  aspect-ratio: 16 / 9;
 }
 
 .videos-stage-host .stage {
