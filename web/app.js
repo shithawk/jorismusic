@@ -29,10 +29,11 @@ const state = {
   openArtists: new Set(),
   openSearchArtists: new Set(),
   artistQueue: null,
-  catalogSessionDownloads: new Set()
+  catalogSessionDownloads: new Set(),
+  videosInline: false,
+  videosScrollToTop: false
 };
 
-let zeroPlayPhase = 0;
 
 let dbPromise = null;
 const fileBlobs = new Map();
@@ -117,7 +118,6 @@ function applyDeviceCopy() {
   document.documentElement.classList.toggle("iphone", compactPhoneLayout());
   document.documentElement.classList.toggle("ipad", deviceKind() === "ipad");
   updateShuffleButton();
-  updateZeroPlayButton();
 }
 let ytPlayer = null;
 let ytReady = false;
@@ -139,7 +139,7 @@ let youtubeHasSearched = false;
 let linkConfirmId = "";
 const downloading = new Set();
 
-const SW_BUILD = "45";
+const SW_BUILD = "55";
 
 const MARQUEE_PAUSE_S = 3;
 const MARQUEE_HOLD_END_S = 3;
@@ -198,11 +198,12 @@ function refreshMarquee(host) {
   );
 }
 
-function setMarqueeText(host, text) {
+function setMarqueeText(host, text, stamp) {
   if (!host) return;
   const next = text || "";
-  if (marqueeText.get(host) === next) return;
-  marqueeText.set(host, next);
+  const key = stamp === undefined ? next : String(stamp) + "\0" + next;
+  if (marqueeText.get(host) === key) return;
+  marqueeText.set(host, key);
   const inner = ensureMarqueeHost(host);
   if (!inner) return;
   inner.textContent = next;
@@ -263,11 +264,6 @@ async function init() {
   window.addEventListener("resize", applyDeviceCopy);
   document.getElementById("install-hint").hidden = standalone();
   state.shuffle = loadShuffle();
-  if (isZeroTheme()) {
-    state.shuffle = false;
-    saveShuffle();
-    zeroPlayPhase = 0;
-  }
   bindEvents();
   bindMediaSession();
   audio().addEventListener("play", () => { if (isSource("local")) setPlaying(true); });
@@ -348,7 +344,7 @@ function bindEvents() {
   document.getElementById("youtube-results").addEventListener("click", (event) => {
     const play = event.target.closest("[data-play]");
     if (play) {
-      playListed(play.dataset.play);
+      playListed(play.dataset.play, { videos: true });
       return;
     }
     const add = event.target.closest("[data-add-video]");
@@ -364,7 +360,7 @@ function bindEvents() {
       return;
     }
     const row = event.target.closest(".song[data-play]");
-    if (row) playListed(row.dataset.play);
+    if (row) playListed(row.dataset.play, { videos: true });
   });
   document.getElementById("nav-search").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -524,10 +520,6 @@ function bindEvents() {
   document.getElementById("previous").addEventListener("click", () => skip(-1));
   document.getElementById("next").addEventListener("click", () => skip(1));
   document.getElementById("play-button").addEventListener("click", () => {
-    if (isZeroTheme()) {
-      zeroPlayButtonClick();
-      return;
-    }
     if (isAudiblyPlaying()) userPause();
     else userPlay(currentTrack() || songToStart(), playerIsOpen());
   });
@@ -557,7 +549,6 @@ function render() {
   renderSearchResults();
   renderPlayer();
   updateShuffleButton();
-  updateZeroPlayButton();
   renderCatalog();
   renderArtists();
   renderVideos();
@@ -683,14 +674,68 @@ function playFavourites() {
   playListed(ids[0], { keepQueue: true });
 }
 
+function videosSheetIsOpen() {
+  const sheet = document.getElementById("videos-sheet");
+  return Boolean(sheet && !sheet.hidden);
+}
+
+function videosInlinePlayback() {
+  return state.videosInline && videosSheetIsOpen();
+}
+
+function isVideoTrack(track) {
+  return Boolean(track && isStreamingTrack(track));
+}
+
+function presentVideosSheet() {
+  hideSheet("add-sheet");
+  hideSheet("manage-sheet");
+  hideSheet("artists-sheet");
+  hideConfirm();
+  document.body.classList.remove("search-page");
+  document.body.classList.remove("songs-page");
+  showSheet("videos-sheet");
+  renderVideos();
+  scrollSheetBodyToTop("videos-sheet");
+}
+
+function syncVideosInlinePlayer() {
+  const track = currentTrack();
+  const use =
+    state.videosInline && videosSheetIsOpen() && Boolean(track && isStreamingTrack(track));
+  const now = document.getElementById("videos-now");
+  const host = document.getElementById("videos-stage-host");
+  const scroll = document.querySelector("#player .player-scroll");
+  const stage = document.querySelector("#player .stage");
+  if (!now || !host || !scroll || !stage) return;
+  if (use) {
+    now.hidden = false;
+    setMarqueeText(document.getElementById("videos-now-title"), track.title, track.id);
+    setMarqueeText(document.getElementById("videos-now-sub"), subtitle(track), track.id + ":sub");
+    if (stage.parentElement !== host) host.append(stage);
+    closePlayer();
+    requestAnimationFrame(() => {
+      if (track.source === "youtube") fitYouTube();
+    });
+  } else {
+    now.hidden = true;
+    if (stage.parentElement !== scroll) {
+      const sub = document.getElementById("player-sub");
+      if (sub) sub.insertAdjacentElement("afterend", stage);
+    }
+  }
+}
+
 function renderPlayer() {
   const track = currentTrack();
-  setMarqueeText(document.getElementById("player-title"), track ? track.title : "");
-  setMarqueeText(document.getElementById("player-sub"), track ? subtitle(track) : "");
+  const stamp = track ? track.id : "none";
+  setMarqueeText(document.getElementById("player-title"), track ? track.title : "", stamp);
+  setMarqueeText(document.getElementById("player-sub"), track ? subtitle(track) : "", stamp + ":sub");
   document.getElementById("stage-local").hidden = !track || track.source !== "local";
   document.getElementById("stage-yt").hidden = !track || track.source !== "youtube";
   document.getElementById("stage-sc").hidden = !track || track.source !== "soundcloud";
   setPlaying(state.playing);
+  syncVideosInlinePlayer();
 }
 
 function bindSeekBar(bar) {
@@ -967,16 +1012,40 @@ function playListed(id, options) {
   const track = state.tracks.find((item) => item.id === id);
   if (!track) return;
   const keepQueue = Boolean(options && options.keepQueue);
+  const videosInline = isVideoTrack(track) && !keepQueue;
   if (!keepQueue) state.artistQueue = null;
-  if (track.source !== "local") {
-    hideSheet("artists-sheet");
-    hideSheet("videos-sheet");
+  if (track.source !== "local") hideSheet("artists-sheet");
+  if (videosInline) {
+    state.videosInline = true;
+    state.videosScrollToTop = true;
+    if (videosSheetIsOpen()) {
+      hideSheet("add-sheet");
+      hideSheet("manage-sheet");
+      hideSheet("artists-sheet");
+      hideConfirm();
+      document.body.classList.remove("search-page");
+      document.body.classList.remove("songs-page");
+      renderVideos();
+      scrollSheetBodyToTop("videos-sheet");
+    } else {
+      presentVideosSheet();
+    }
+  } else {
+    state.videosInline = false;
+    if (track.source !== "local") hideSheet("videos-sheet");
   }
   if (!keepQueue && track.id === state.currentId && state.playing) {
+    if (videosInline) {
+      state.videosScrollToTop = true;
+      syncVideosInlinePlayer();
+      renderVideos();
+      scrollSheetBodyToTop("videos-sheet");
+      return;
+    }
     if (track.source !== "local") openPlayer();
     return;
   }
-  userPlay(track, track.source !== "local");
+  userPlay(track, !videosInline && track.source !== "local");
 }
 
 function openArtists(name) {
@@ -1123,13 +1192,11 @@ function searchHeading(text) {
 }
 
 function openVideos() {
-  hideSheet("add-sheet");
-  hideSheet("manage-sheet");
-  hideSheet("artists-sheet");
-  hideConfirm();
-  closePlayer();
-  showSheet("videos-sheet");
-  renderVideos();
+  presentVideosSheet();
+  const track = currentTrack();
+  state.videosInline = isVideoTrack(track);
+  if (!state.videosInline) closePlayer();
+  syncVideosInlinePlayer();
 }
 
 async function mergeYouTubeCatalogFromMac() {
@@ -1174,14 +1241,19 @@ function renderVideos() {
   if (!sheet || sheet.hidden) return;
   const list = document.getElementById("video-list");
   const scroller = list.closest(".sheet-body");
-  const scrollTop = scroller ? scroller.scrollTop : 0;
+  const jumpTop = state.videosScrollToTop;
+  const scrollTop = scroller && !jumpTop ? scroller.scrollTop : 0;
   const videos = state.tracks
     .filter((track) => track.source === "youtube" || track.source === "soundcloud")
     .sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base", numeric: true }));
   list.replaceChildren();
   document.getElementById("videos-empty").hidden = videos.length > 0;
   for (const track of videos) list.append(songBox(track));
-  if (scroller) scroller.scrollTop = scrollTop;
+  if (scroller) {
+    scroller.scrollTop = jumpTop ? 0 : scrollTop;
+    if (jumpTop) state.videosScrollToTop = false;
+  }
+  syncVideosInlinePlayer();
 }
 
 function setVideoSearchStatus(text) {
@@ -1432,6 +1504,8 @@ function isSource(source) {
 }
 
 function openPlayer() {
+  state.videosInline = false;
+  syncVideosInlinePlayer();
   const player = document.getElementById("player");
   player.classList.add("open");
   player.inert = false;
@@ -1465,12 +1539,10 @@ function setPlaying(playing) {
   if (playing) streamingHold = isStreamingTrack(currentTrack());
   else if (!appInBackground()) streamingHold = false;
   const playButton = document.getElementById("play-button");
-  if (isZeroTheme()) updateZeroPlayButton();
-  else {
-    document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
-    playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
-  }
+  document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
+  playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
   playButton.classList.toggle("is-playing", playing);
+  playButton.classList.remove("is-shuffle-on");
   if ("mediaSession" in navigator) {
     navigator.mediaSession.playbackState = playing ? "playing" : "paused";
   }
@@ -1691,6 +1763,10 @@ function showSheet(id) {
 function hideSheet(id) {
   document.getElementById(id).hidden = true;
   if (id === "add-sheet") hideLinkConfirm();
+  if (id === "videos-sheet") {
+    state.videosInline = false;
+    syncVideosInlinePlayer();
+  }
   syncNavCurrent();
 }
 
@@ -2374,6 +2450,7 @@ async function playTrack(track, options) {
     }
     if (track.source === "local") showSongList();
     else if (open) openPlayer();
+    else if (state.videosInline) syncVideosInlinePlayer();
     finishTrackChange();
     render();
     if (track.source === "local") showSongList();
@@ -2385,6 +2462,10 @@ async function playTrack(track, options) {
   state.playing = Boolean(started);
   if (track.source === "local") closePlayer();
   else if (open) openPlayer();
+  else if (state.videosInline) {
+    closePlayer();
+    syncVideosInlinePlayer();
+  }
   publishSession(track);
   render();
   if (track.source === "local") showSongList();
@@ -2432,7 +2513,8 @@ function userPlay(track, open) {
   beginTrackChange();
   pauseYouTube();
   pauseSoundCloud();
-  const show = Boolean(open || track.source !== "local");
+  const show =
+    open === false ? false : Boolean(open || track.source !== "local");
   const player = audio();
   if (track.source === "local") {
     const url = fileURLs.get(track.id);
@@ -2468,7 +2550,7 @@ function skip(direction) {
       restart();
       return;
     }
-    userPlay(track, playerIsOpen());
+    userPlay(track, videosInlinePlayback() ? false : playerIsOpen());
     return;
   }
   const track = trackForStep(direction);
@@ -2478,7 +2560,7 @@ function skip(direction) {
     restart();
     return;
   }
-  userPlay(track, playerIsOpen());
+  userPlay(track, videosInlinePlayback() ? false : playerIsOpen());
 }
 
 function realSource(player) {
@@ -2641,59 +2723,6 @@ function shuffleIds(ids) {
   return copy;
 }
 
-function isZeroTheme() {
-  return document.documentElement.getAttribute("data-family-theme") === "zero";
-}
-
-function zeroPlayButtonClick() {
-  const track = currentTrack() || songToStart();
-
-  if (isAudiblyPlaying()) {
-    if (!state.shuffle) {
-      setShuffle(true);
-      zeroPlayPhase = 2;
-    } else {
-      setShuffle(false);
-      userPause();
-      zeroPlayPhase = 0;
-    }
-    updateZeroPlayButton();
-    return;
-  }
-
-  if (zeroPlayPhase === 0) {
-    setShuffle(false);
-    if (track) userPlay(track, playerIsOpen());
-    zeroPlayPhase = 1;
-  } else if (zeroPlayPhase === 1) {
-    setShuffle(true);
-    if (track) userPlay(track, playerIsOpen());
-    zeroPlayPhase = 2;
-  } else {
-    setShuffle(false);
-    zeroPlayPhase = 0;
-  }
-  updateZeroPlayButton();
-}
-
-function updateZeroPlayButton() {
-  const playButton = document.getElementById("play-button");
-  if (!playButton) return;
-  if (!isZeroTheme()) {
-    playButton.classList.remove("is-shuffle-on");
-    return;
-  }
-  const playing = isAudiblyPlaying();
-  const shuffleVisual = state.shuffle && (playing || zeroPlayPhase >= 2);
-  playButton.classList.toggle("is-shuffle-on", shuffleVisual);
-  let label = "Play";
-  if (playing && state.shuffle) label = "Stop";
-  else if (playing) label = "Shuffle";
-  else if (zeroPlayPhase === 1) label = "Shuffle";
-  else if (zeroPlayPhase === 2) label = "Stop";
-  playButton.setAttribute("aria-label", label);
-}
-
 function setShuffle(on) {
   state.shuffle = on;
   state.shuffleHistory = [];
@@ -2701,7 +2730,6 @@ function setShuffle(on) {
   if (on) startShuffle(state.currentId);
   saveShuffle();
   updateShuffleButton();
-  updateZeroPlayButton();
 }
 
 function updateShuffleButton() {
@@ -2870,6 +2898,7 @@ async function playSoundCloud(track) {
     finishTrackChange();
     setPlaying(true);
     applyPendingSeek();
+    if (state.videosInline) syncVideosInlinePlayer();
   });
   scWidget.bind(window.SC.Widget.Events.PAUSE, () => {
     if (!isSource("soundcloud")) return;
@@ -2939,6 +2968,10 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
           finishTrackChange();
           setPlaying(true);
           applyPendingSeek();
+          if (state.videosInline) {
+            syncVideosInlinePlayer();
+            requestAnimationFrame(fitYouTube);
+          }
         }
         if (event.data === YT.PlayerState.PAUSED) {
           if (streamingHold && appInBackground()) return;
@@ -3079,7 +3112,7 @@ function step(direction) {
       restart();
       return;
     }
-    playTrack(track, { open: playerIsOpen() || track.source !== "local" });
+    playTrack(track, { open: videosInlinePlayback() ? false : playerIsOpen() || track.source !== "local" });
     return;
   }
   const track = trackForStep(direction);
@@ -3089,7 +3122,7 @@ function step(direction) {
     restart();
     return;
   }
-  playTrack(track, { open: playerIsOpen() || track.source !== "local" });
+  playTrack(track, { open: videosInlinePlayback() ? false : playerIsOpen() || track.source !== "local" });
 }
 
 function restart() {
@@ -3546,19 +3579,15 @@ function applyFamilyTheme(theme) {
     btn.classList.toggle("is-active", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
-  if (theme === "zero") {
-    zeroPlayPhase = 0;
-    if (state.shuffle) {
-      state.shuffle = false;
-      state.shuffleHistory = [];
-      state.shuffleRewind = false;
-      saveShuffle();
-    }
-  } else {
-    zeroPlayPhase = 0;
-  }
   updateShuffleButton();
-  updateZeroPlayButton();
+  const playButton = document.getElementById("play-button");
+  if (playButton) {
+    const playing = isAudiblyPlaying();
+    playButton.classList.remove("is-shuffle-on");
+    document.getElementById("play-label").textContent = playing ? "Pause" : "Play";
+    playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+    playButton.classList.toggle("is-playing", playing);
+  }
 }
 
 async function deleteTrack(id) {

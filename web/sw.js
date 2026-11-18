@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v203";
+const CACHE = "joris-shell-v245";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=168",
+  "/styles.css?v=184",
   "/themes.css",
-  "/themes.css?v=120",
+  "/themes.css?v=150",
   "/app.js",
-  "/app.js?v=109",
+  "/app.js?v=115",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -59,11 +59,22 @@ function refreshShell(request) {
     .finally(() => clearTimeout(timer));
 }
 
+function shellCacheIgnoresQuery(pathname) {
+  return !(
+    pathname === "/styles.css" ||
+    pathname === "/themes.css" ||
+    pathname === "/app.js"
+  );
+}
+
 async function cachedShell(request) {
   const exact = await caches.match(request);
   if (exact) return exact;
-  const ignored = await caches.match(request, { ignoreSearch: true });
-  if (ignored) return ignored;
+  const pathname = new URL(request.url).pathname;
+  if (shellCacheIgnoresQuery(pathname)) {
+    const ignored = await caches.match(request, { ignoreSearch: true });
+    if (ignored) return ignored;
+  }
   if (request.mode === "navigate") {
     return (await caches.match("/index.html")) || (await caches.match("/"));
   }
