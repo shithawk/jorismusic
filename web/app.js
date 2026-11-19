@@ -310,7 +310,15 @@ function bindLocalAudioElement(player) {
   });
   player.addEventListener("pause", () => {
     if (player !== audio()) return;
-    if (isSource("local") && !player.ended && !xf.active) setPlaying(false);
+    if (!isSource("local") || player.ended || xf.active) return;
+    const trackId = state.currentId;
+    window.setTimeout(() => {
+      if (state.currentId !== trackId) return;
+      if (player !== audio() || !player.paused || player.ended || xf.active) return;
+      // Android often pauses briefly on focus loss — keep playing intent while backgrounded.
+      if (appInBackground()) return;
+      setPlaying(false);
+    }, 250);
   });
   player.addEventListener("ended", () => {
     if (xf.active) {
@@ -484,9 +492,15 @@ function nextTrackForCrossfade() {
   return trackForStep(1);
 }
 
-function cancelCrossfade() {
-  if (xf.raf) cancelAnimationFrame(xf.raf);
+function clearCrossfadeTimer() {
+  if (!xf.raf) return;
+  cancelAnimationFrame(xf.raf);
+  clearTimeout(xf.raf);
   xf.raf = 0;
+}
+
+function cancelCrossfade() {
+  clearCrossfadeTimer();
   xf.active = false;
   xf.nextTrack = null;
   xf.preloadedId = null;
@@ -525,8 +539,7 @@ function finishCrossfade() {
   const token = xf.token;
   const out = xf.out;
   const inn = xf.inn;
-  if (xf.raf) cancelAnimationFrame(xf.raf);
-  xf.raf = 0;
+  clearCrossfadeTimer();
   xf.active = false;
   xf.nextTrack = null;
   xf.preloadedId = null;
@@ -571,6 +584,11 @@ function runCrossfadeTick() {
   setSlotVolume(xf.inn, t);
   if (t >= 1) {
     finishCrossfade();
+    return;
+  }
+  // rAF freezes in background on Android; timer keeps the fade moving.
+  if (appInBackground()) {
+    xf.raf = window.setTimeout(runCrossfadeTick, 50);
     return;
   }
   xf.raf = requestAnimationFrame(runCrossfadeTick);
@@ -812,26 +830,13 @@ async function init() {
   syncCrossfadeToggle();
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      skipStreamingWhenBackgrounded();
+      onAppHidden();
       return;
     }
-    if (!streamingHold) return;
-    resumeStreaming();
+    onAppVisible();
   });
-  window.addEventListener("pagehide", () => skipStreamingWhenBackgrounded());
-  document.addEventListener("freeze", () => skipStreamingWhenBackgrounded());
-  window.addEventListener("blur", () => {
-    window.setTimeout(() => {
-      if (document.hasFocus()) return;
-      if (document.hidden || document.visibilityState === "hidden") {
-        skipStreamingWhenBackgrounded();
-        return;
-      }
-      const active = document.activeElement;
-      if (active && active.tagName === "IFRAME") return;
-      skipStreamingWhenBackgrounded();
-    }, 200);
-  });
+  window.addEventListener("pagehide", () => onAppHidden());
+  document.addEventListener("freeze", () => onAppHidden());
   window.addEventListener("offline", () => {
     const track = currentTrack();
     if (shouldSkipStreamingTrack(track)) skipPastStreamingTracks(1);
@@ -2366,11 +2371,51 @@ function embedPaused() {
   }, 400);
 }
 
+function onAppHidden() {
+  // Finish an in-flight fade so background playback is not stuck near volume 0
+  // when requestAnimationFrame is throttled.
+  if (xf.active) finishCrossfade();
+  scheduleBackgroundPlaybackCheck();
+}
+
+function onAppVisible() {
+  streamingPauseToken++;
+  if (streamingHold) resumeStreaming();
+  resumeLocalIfNeeded();
+}
+
+function scheduleBackgroundPlaybackCheck() {
+  const trackId = state.currentId;
+  const token = ++streamingPauseToken;
+  window.setTimeout(() => {
+    if (token !== streamingPauseToken) return;
+    if (!appInBackground()) return;
+    if (state.currentId !== trackId) return;
+    const track = currentTrack();
+    if (!track) return;
+    if (track.source === "local") {
+      resumeLocalIfNeeded();
+      return;
+    }
+    // Only leave streaming after it has actually stopped — do not skip on focus alone.
+    if (isStreamingTrack(track) && (state.playing || streamingHold || streamingLive) && !isAudiblyPlaying()) {
+      skipStreamingWhenBackgrounded();
+    }
+  }, 900);
+}
+
+function resumeLocalIfNeeded() {
+  if (!state.playing || !isSource("local")) return;
+  const el = audio();
+  if (!el || !el.paused || el.ended) return;
+  void el.play().catch(() => {});
+}
+
 function skipStreamingWhenBackgrounded() {
   const track = currentTrack();
   if (!isStreamingTrack(track)) return;
   if (!state.playing && !streamingHold && !streamingLive) return;
-  // Minimize and lost focus stop embedded YouTube and SoundCloud. Continue on a local song.
+  // Embeds often die when the phone is away — continue on a local song when possible.
   streamingPauseToken++;
   streamingLive = false;
   advancePastStreamingFailure();
@@ -4657,11 +4702,19 @@ const liquidBlob = {
   trail: [],
   shown: null,
 
+  helpKey() {
+    const script = document.querySelector('script[src*="app.js"]');
+    const src = script ? script.getAttribute("src") || "" : "";
+    const match = /[?&]v=(\d+)/.exec(src);
+    return "liquid-blob-help-seen-" + (match ? match[1] : "0");
+  },
+
   start() {
     const stage = document.getElementById("liquid-transport");
     if (!stage) return;
     stage.hidden = false;
     this.bind();
+    this.showHelpIfNeeded();
     if (this.raf) return;
     const tick = (now) => {
       this.raf = requestAnimationFrame(tick);
@@ -4679,11 +4732,45 @@ const liquidBlob = {
     if (stage) stage.hidden = true;
   },
 
+  helpSeen() {
+    try {
+      return localStorage.getItem(this.helpKey()) === "1";
+    } catch {
+      return false;
+    }
+  },
+
+  showHelpIfNeeded() {
+    const help = document.getElementById("liquid-help");
+    if (!help) return;
+    help.hidden = this.helpSeen();
+  },
+
+  dismissHelp() {
+    const help = document.getElementById("liquid-help");
+    if (help) help.hidden = true;
+    try {
+      localStorage.setItem(this.helpKey(), "1");
+    } catch {
+      // Keep the dismiss for this visit even if storage is blocked.
+    }
+  },
+
   bind() {
     if (this.bound) return;
     const btn = document.getElementById("liquid-play");
     if (!btn) return;
     this.bound = true;
+    const help = document.getElementById("liquid-help");
+    if (help) {
+      const dismiss = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dismissHelp();
+      };
+      help.addEventListener("pointerdown", dismiss);
+      help.addEventListener("click", dismiss);
+    }
     const aim = (event) => {
       const rect = btn.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
@@ -4920,7 +5007,7 @@ const liquidBlob = {
 
   drawMark(ctx, x, y, size, playing) {
     ctx.save();
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.33;
     ctx.fillStyle = "#f7f3ea";
     const s = size * 0.2;
     if (playing) {
@@ -4957,7 +5044,7 @@ const liquidBlob = {
       ctx.stroke();
     };
     ctx.save();
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.33;
     ctx.strokeStyle = "#f7f3ea";
     ctx.lineWidth = Math.max(1.5, 3 * scale);
     ctx.lineCap = "round";
@@ -4971,7 +5058,7 @@ const liquidBlob = {
 
   drawSkip(ctx, cx, cy, size, direction) {
     ctx.save();
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.33;
     ctx.fillStyle = "#f7f3ea";
     const s = size * 0.16;
     const x = cx + direction * size * 0.36;
