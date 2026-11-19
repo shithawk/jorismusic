@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build youtube/catalog.json from youtube/videos.txt (one YouTube URL or video ID per line).
+# Build youtube/catalog.json from youtube/videos.txt (YouTube or SoundCloud, one per line).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -57,6 +57,33 @@ def sanitize_id(raw: str):
         return raw
     return None
 
+def soundcloud_url_from_text(line: str):
+    raw = line.strip()
+    if not raw:
+        return None
+    match = re.search(r"https?://[^\s]+", raw, re.I)
+    candidate = match.group(0).rstrip("),.;") if match else ""
+    if not candidate:
+        return None
+    try:
+        url = urllib.parse.urlparse(candidate)
+    except ValueError:
+        return None
+    host = (url.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    path = (url.path or "").rstrip("/")
+    if not path.strip("/"):
+        return None
+    if host in {"soundcloud.com", "m.soundcloud.com"}:
+        return "https://soundcloud.com" + path
+    if host == "on.soundcloud.com":
+        return "https://on.soundcloud.com" + path
+    return None
+
+def media_token(part: str):
+    return youtube_id_from_text(part) or soundcloud_url_from_text(part)
+
 def split_artist_title(text: str) -> tuple[str, str]:
     text = (text or "").strip()
     if not text:
@@ -75,9 +102,9 @@ def parse_manual_labels(line: str) -> tuple[str, str, str]:
 
     if "\t" in stripped:
         cols = [c.strip() for c in stripped.split("\t") if c.strip()]
-        if len(cols) >= 3 and youtube_id_from_text(cols[0]):
+        if len(cols) >= 3 and media_token(cols[0]):
             return cols[0], cols[1], cols[2]
-        if len(cols) >= 3 and youtube_id_from_text(cols[-1]):
+        if len(cols) >= 3 and media_token(cols[-1]):
             return cols[-1], cols[0], cols[1]
 
     if "|" not in stripped:
@@ -87,7 +114,7 @@ def parse_manual_labels(line: str) -> tuple[str, str, str]:
     if len(parts) == 1:
         return url_part, artist, title
 
-    url_idx = next((i for i, p in enumerate(parts) if youtube_id_from_text(p)), None)
+    url_idx = next((i for i, p in enumerate(parts) if media_token(p)), None)
     if url_idx is None:
         return url_part, artist, title
 
@@ -99,6 +126,18 @@ def parse_manual_labels(line: str) -> tuple[str, str, str]:
     elif len(rest) == 1:
         artist, title = split_artist_title(rest[0])
     return url_part, artist, title
+
+def soundcloud_oembed(page: str) -> tuple[str, str]:
+    url = "https://soundcloud.com/oembed?format=json&url=" + urllib.parse.quote(page, safe="")
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError):
+        return "SoundCloud", ""
+    title = str(data.get("title") or "").strip() or "SoundCloud"
+    artist = str(data.get("author_name") or "").strip()
+    return title, artist
 
 def oembed_meta(video_id: str) -> tuple[str, str]:
     page = "https://www.youtube.com/watch?v=" + urllib.parse.quote(video_id, safe="")
@@ -136,35 +175,48 @@ for line in lines:
         continue
     url_part, manual_artist, manual_title = parse_manual_labels(stripped)
     vid = youtube_id_from_text(url_part)
-    if not vid or vid in seen:
+    soundcloud = None if vid else soundcloud_url_from_text(url_part)
+    key = vid or soundcloud
+    if not key or key in seen:
         continue
-    seen.add(vid)
+    seen.add(key)
 
     title = (manual_title or "").strip()
     artist = (manual_artist or "").strip()
 
+    if vid:
+        if not title and fetch_oembed:
+            t, a = oembed_meta(vid)
+            title, artist = parse_names(t, a)
+        if not title:
+            title = "YouTube video"
+        entries.append({
+            "videoId": vid,
+            "title": title,
+            "artist": artist,
+            "url": "https://www.youtube.com/watch?v=" + vid,
+        })
+        continue
+
     if not title and fetch_oembed:
-        t, a = oembed_meta(vid)
-        title, artist = parse_names(t, a)
-
+        title, artist = soundcloud_oembed(soundcloud)
     if not title:
-        title = "YouTube video"
-
+        title = "SoundCloud"
     entries.append({
-        "videoId": vid,
+        "source": "soundcloud",
         "title": title,
         "artist": artist,
-        "url": "https://www.youtube.com/watch?v=" + vid,
+        "url": soundcloud,
     })
 
-entries.sort(key=lambda e: ((e.get("title") or "").casefold(), e["videoId"]))
+entries.sort(key=lambda e: ((e.get("title") or "").casefold(), e.get("videoId") or e.get("url") or ""))
 payload = json.dumps(entries, indent=2, ensure_ascii=False) + "\n"
 tmp = dest.with_suffix(".json.tmp")
 tmp.write_text(payload, encoding="utf-8")
 tmp.replace(dest)
 print(f"Wrote {len(entries)} videos to {dest}")
 if not entries:
-    print("Tip: add YouTube URLs to youtube/videos.txt, then run this script again.")
+    print("Tip: add YouTube or SoundCloud URLs to youtube/videos.txt, then run this script again.")
 PY
 
 chmod +x "$ROOT/scripts/make-youtube-catalog.sh"

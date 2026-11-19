@@ -1,21 +1,22 @@
-# Jori's YouTube list (blank lines and # comments are ignored).
+# Jori's video list (blank lines and # comments are ignored).
 #
-# URL only (tries YouTube for titles; often shows "YouTube video" offline):
+# YouTube or SoundCloud. Same line shapes for both.
+#
+# URL only (tries the site for a title):
 #   https://www.youtube.com/watch?v=VIDEO_ID
+#   https://soundcloud.com/artist/track
 #
 # Recommended — you set song + artist (no network needed):
 #   Artist - Song title | https://www.youtube.com/watch?v=VIDEO_ID
+#   Artist - Song title | https://soundcloud.com/artist/track
 #
 # Or URL first:
-#   https://www.youtube.com/watch?v=VIDEO_ID | Artist | Song title
-#
-# Or tab-separated:
-#   https://www.youtube.com/watch?v=VIDEO_ID	Artist	Song title
+#   https://soundcloud.com/artist/track | Artist | Song title
 #
 # Rebuild after editing:
 #   bash scripts/make-youtube-catalog.sh
 #
-# Videos → "From the computer" in Jori's Music. Tap Add to save on the device.
+# Videos in Jori's Music. Open the player once so this list can load.
 
 DIIV - Brown Paper Bag | https://www.youtube.com/watch?v=ZgS-EYI5h14&list=RDZgS-EYI5h14
 
