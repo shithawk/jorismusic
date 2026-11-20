@@ -1752,6 +1752,14 @@ body.has-now .sheet-screen { bottom: calc(var(--transport-bar) + var(--now-bar-s
   padding-bottom: 40px;
 }
 
+#add-sheet .sheet-body {
+  padding-bottom: 40px;
+}
+
+#catalog-list {
+  padding-bottom: 24px;
+}
+
 #videos-sheet .sheet-body > h1 {
   margin: 0 0 2px;
 }

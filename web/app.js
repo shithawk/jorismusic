@@ -267,6 +267,8 @@ const otherAudio = () => document.getElementById(primaryAudioId === "audio" ? "a
 const CROSSFADE_MS = 9000;
 const CROSSFADE_SKIP_MS = 800;
 const PRELOAD_LEAD_MS = 1200;
+/** Extra lead when the phone is away so throttled timers still catch the fade window. */
+const BACKGROUND_CROSSFADE_LEAD_MS = 2800;
 
 const xf = {
   active: false,
@@ -279,6 +281,8 @@ const xf = {
   preloadedId: null,
   token: 0
 };
+
+let crossfadeArmTimer = 0;
 
 let ytPlayerA = null;
 let ytPlayerB = null;
@@ -306,6 +310,7 @@ function bindLocalAudioElement(player) {
   player.addEventListener("timeupdate", () => {
     if (player !== audio()) return;
     if (!seekHold && isSource("local")) refreshSeek();
+    armCrossfadeTimer();
     maybeStartCrossfade();
   });
   player.addEventListener("pause", () => {
@@ -316,7 +321,11 @@ function bindLocalAudioElement(player) {
       if (state.currentId !== trackId) return;
       if (player !== audio() || !player.paused || player.ended || xf.active) return;
       // Android often pauses briefly on focus loss — keep playing intent while backgrounded.
-      if (appInBackground()) return;
+      if (appInBackground()) {
+        resumeLocalIfNeeded();
+        armCrossfadeTimer();
+        return;
+      }
       setPlaying(false);
     }, 250);
   });
@@ -329,6 +338,16 @@ function bindLocalAudioElement(player) {
     if (player !== audio()) return;
     if (!shouldAdvance() || !isSource("local")) return;
     if (!player.duration || player.currentTime + 0.75 < player.duration) return;
+    // Background often skips the fade window — try a short handoff before a hard cut.
+    if (state.crossfade) {
+      const next = nextTrackForCrossfade();
+      if (next && next.id !== state.currentId) {
+        void startCrossfade(next, CROSSFADE_SKIP_MS).then((ok) => {
+          if (!ok) step(1);
+        });
+        return;
+      }
+    }
     step(1);
   });
 }
@@ -499,8 +518,40 @@ function clearCrossfadeTimer() {
   xf.raf = 0;
 }
 
+function clearCrossfadeArmTimer() {
+  if (!crossfadeArmTimer) return;
+  window.clearTimeout(crossfadeArmTimer);
+  crossfadeArmTimer = 0;
+}
+
+function armCrossfadeTimer() {
+  clearCrossfadeArmTimer();
+  if (!state.crossfade || xf.active || seekHold || !state.playing || !shouldAdvance()) return;
+  const track = currentTrack();
+  if (!track || track.source === "soundcloud") return;
+  const next = nextTrackForCrossfade();
+  if (!next || next.id === track.id) return;
+  if (shouldSkipStreamingTrack(next)) return;
+  const pos = currentPlaybackPosition();
+  if (!pos.duration || pos.current < 0) return;
+  const remainingMs = (pos.duration - pos.current) * 1000;
+  if (!(remainingMs > 0)) return;
+  const lead = appInBackground() ? BACKGROUND_CROSSFADE_LEAD_MS : 300;
+  const startIn = remainingMs - CROSSFADE_MS - lead;
+  if (startIn <= 0) {
+    maybeStartCrossfade();
+    return;
+  }
+  crossfadeArmTimer = window.setTimeout(() => {
+    crossfadeArmTimer = 0;
+    maybeStartCrossfade();
+    if (!xf.active) armCrossfadeTimer();
+  }, startIn);
+}
+
 function cancelCrossfade() {
   clearCrossfadeTimer();
+  clearCrossfadeArmTimer();
   xf.active = false;
   xf.nextTrack = null;
   xf.preloadedId = null;
@@ -574,6 +625,7 @@ function finishCrossfade() {
   finishTrackChange();
   setPlaying(true);
   syncYtMountVisibility();
+  armCrossfadeTimer();
 }
 
 function runCrossfadeTick() {
@@ -739,6 +791,7 @@ async function startCrossfade(nextTrack, durationMs) {
     skipPastStreamingTracks(1);
     return false;
   }
+  clearCrossfadeArmTimer();
   const previousId = state.currentId;
   const out = captureOutgoingSlot();
   if (!out) return false;
@@ -788,9 +841,15 @@ async function startCrossfade(nextTrack, durationMs) {
 function maybeStartCrossfade() {
   if (!state.crossfade || xf.active || seekHold || !state.playing || !shouldAdvance()) return;
   const track = currentTrack();
-  if (!track || !isAudiblyPlaying()) return;
+  if (!track) return;
+  // Away from the phone, Android may briefly pause local audio — still arm the fade.
+  if (!isAudiblyPlaying()) {
+    if (!(appInBackground() && track.source === "local" && realSource(audio()))) return;
+  }
   const next = nextTrackForCrossfade();
   if (!next || next.id === track.id) return;
+  if (shouldSkipStreamingTrack(next)) return;
+  const leadSec = appInBackground() ? BACKGROUND_CROSSFADE_LEAD_MS / 1000 : 0;
   if (track.source === "soundcloud") {
     if (!scWidget || !scWidget.getPosition) return;
     scWidget.getPosition((ms) => {
@@ -801,7 +860,9 @@ function maybeStartCrossfade() {
         const duration = (Number(dur) || 0) / 1000;
         if (!duration || current <= 0) return;
         const remaining = duration - current;
-        if (remaining <= CROSSFADE_MS / 1000) void startCrossfade(next, Math.min(CROSSFADE_MS, remaining * 1000));
+        if (remaining <= CROSSFADE_MS / 1000 + leadSec) {
+          void startCrossfade(next, Math.min(CROSSFADE_MS, remaining * 1000));
+        }
       });
     });
     return;
@@ -809,7 +870,7 @@ function maybeStartCrossfade() {
   const pos = currentPlaybackPosition();
   if (!pos.duration || pos.current <= 0) return;
   const remaining = pos.duration - pos.current;
-  if (remaining <= CROSSFADE_MS / 1000) {
+  if (remaining <= CROSSFADE_MS / 1000 + leadSec) {
     void startCrossfade(next, Math.min(CROSSFADE_MS, remaining * 1000));
   }
 }
@@ -862,6 +923,7 @@ async function init() {
     if (pendingSeek) applyPendingSeek();
     syncPlaybackChrome();
     refreshSeek();
+    armCrossfadeTimer();
     maybeStartCrossfade();
   }, 400);
 }
@@ -2372,9 +2434,16 @@ function embedPaused() {
 }
 
 function onAppHidden() {
-  // Finish an in-flight fade so background playback is not stuck near volume 0
-  // when requestAnimationFrame is throttled.
-  if (xf.active) finishCrossfade();
+  // Keep an in-flight fade on timer ticks (rAF freezes away from the phone).
+  // Snapping finishCrossfade here made the next song sound like a hard cut.
+  if (xf.active) {
+    clearCrossfadeTimer();
+    xf.raf = window.setTimeout(runCrossfadeTick, 50);
+  } else {
+    resumeLocalIfNeeded();
+    armCrossfadeTimer();
+    maybeStartCrossfade();
+  }
   scheduleBackgroundPlaybackCheck();
 }
 
@@ -2382,6 +2451,7 @@ function onAppVisible() {
   streamingPauseToken++;
   if (streamingHold) resumeStreaming();
   resumeLocalIfNeeded();
+  armCrossfadeTimer();
 }
 
 function scheduleBackgroundPlaybackCheck() {
@@ -3030,15 +3100,54 @@ function probeStreamingPlayback(parsed, meta, options) {
   return Promise.reject(new Error(LINK_PLAY_FAIL));
 }
 
+function remountYouTubePlaceholder(mountId) {
+  const stage = document.getElementById("stage-yt");
+  if (!stage) return;
+  const existing = document.getElementById(mountId);
+  const div = document.createElement("div");
+  div.id = mountId;
+  div.className = "yt-mount" + (mountId === "yt-player" ? " is-active" : "");
+  if (mountId !== "yt-player") div.hidden = true;
+  if (existing && existing.parentNode) existing.replaceWith(div);
+  else stage.append(div);
+}
+
+function repairYouTubePlayersIfNeeded() {
+  const broken = (player) => !player || typeof player.loadVideoById !== "function";
+  if (!broken(ytPlayerA) && !broken(ytPlayerB)) {
+    syncActiveYtAlias();
+    return;
+  }
+  if (broken(ytPlayerA)) {
+    ytPlayerA = null;
+    remountYouTubePlaceholder("yt-player");
+  }
+  if (broken(ytPlayerB)) {
+    ytPlayerB = null;
+    remountYouTubePlaceholder("yt-player-b");
+  }
+  ytReady = false;
+  syncActiveYtAlias();
+  if (!(window.YT && window.YT.Player)) return;
+  if (!ytPlayerA) makeYouTubePlayer("yt-player", true);
+  if (!ytPlayerB) makeYouTubePlayer("yt-player-b", false);
+}
+
 function probeYouTubePlayback(videoId) {
+  // Offscreen muted probe (accepts PLAYING or sustained BUFFERING). Avoids false
+  // rejects from the hidden dual-slot players, then repairs main embeds if needed.
   return new Promise((resolve, reject) => {
     let settled = false;
     let player = null;
     let mount = null;
+    let poll = 0;
+    let bufferingSince = 0;
     const finish = (ok) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (poll) window.clearInterval(poll);
+      poll = 0;
       try {
         if (player && player.stopVideo) player.stopVideo();
       } catch { /* probe teardown */ }
@@ -3048,6 +3157,7 @@ function probeYouTubePlayback(videoId) {
       if (mount && mount.parentNode) mount.remove();
       const leftover = document.getElementById("yt-probe-mount");
       if (leftover && leftover.parentNode) leftover.remove();
+      repairYouTubePlayersIfNeeded();
       if (ok) resolve();
       else reject(new Error(LINK_PLAY_FAIL));
     };
@@ -3064,6 +3174,8 @@ function probeYouTubePlayback(videoId) {
           };
           wait();
         });
+        // Warm the real players first so teardown cannot leave them missing.
+        void ensureYouTubePlayers();
         mount = document.createElement("div");
         mount.id = "yt-probe-mount";
         mount.setAttribute("aria-hidden", "true");
@@ -3089,14 +3201,37 @@ function probeYouTubePlayback(videoId) {
                 if (event.target.mute) event.target.mute();
                 if (event.target.setVolume) event.target.setVolume(0);
                 if (event.target.playVideo) event.target.playVideo();
-              } catch { /* wait for PLAYING */ }
+              } catch { /* wait for PLAYING / BUFFERING */ }
             },
             onStateChange: (event) => {
+              if (!window.YT) return;
               if (event.data === YT.PlayerState.PLAYING) finish(true);
             },
             onError: () => finish(false)
           }
         });
+        poll = window.setInterval(() => {
+          if (settled || !player || !window.YT) return;
+          try {
+            const data = player.getVideoData ? player.getVideoData() : null;
+            const state = player.getPlayerState ? player.getPlayerState() : -1;
+            if (!(data && data.video_id === videoId)) {
+              bufferingSince = 0;
+              return;
+            }
+            if (state === YT.PlayerState.PLAYING) {
+              finish(true);
+              return;
+            }
+            // Phones sometimes stay in BUFFERING for muted offscreen probes even when the video is fine.
+            if (state === YT.PlayerState.BUFFERING || state === YT.PlayerState.CUED) {
+              if (!bufferingSince) bufferingSince = Date.now();
+              else if (Date.now() - bufferingSince >= 700) finish(true);
+            } else {
+              bufferingSince = 0;
+            }
+          } catch { /* keep polling */ }
+        }, 120);
       } catch {
         finish(false);
       }
@@ -3923,20 +4058,15 @@ function tryPlayYouTube() {
   if (!track || track.source !== "youtube" || track.mediaRef !== pendingYtVideo) return;
   try {
     const loadedId = ytPlayer.getVideoData ? ytPlayer.getVideoData().video_id : "";
-    if (loadedId && loadedId !== track.mediaRef) return;
     const playerState = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
-    if (playerState === YT.PlayerState.PLAYING) {
+    // Only clear when the requested video is actually playing — not the previous one.
+    if (playerState === YT.PlayerState.PLAYING && loadedId === track.mediaRef) {
       pendingYtPlay = false;
       return;
     }
-    if (
-      playerState === YT.PlayerState.UNSTARTED ||
-      playerState === YT.PlayerState.CUED ||
-      playerState === YT.PlayerState.PAUSED ||
-      playerState === YT.PlayerState.BUFFERING
-    ) {
-      ytPlayer.playVideo();
-    }
+    // Always nudge play while switching: the prior video can still report PLAYING
+    // for a moment after loadVideoById, and skipping playVideo leaves the new one stuck.
+    ytPlayer.playVideo();
   } catch { /* The player may not be ready yet. */ }
 }
 
@@ -3958,17 +4088,29 @@ function playYouTube(track) {
     armStreamingWatchdog();
     return;
   }
-  const run = () => {
-    if (!isSource("youtube")) return;
-    const current = currentTrack();
-    if (!current || current.mediaRef !== track.mediaRef) return;
-    fitYouTube();
-    setYtVolume(ytPlayer, 1);
+  if (!isSource("youtube")) return;
+  const current = currentTrack();
+  if (!current || current.mediaRef !== track.mediaRef) return;
+  // Load + play in the same turn as the tap so autoplay policies allow unmuted play.
+  setYtVolume(ytPlayer, 1);
+  try {
+    if (ytPlayer.unMute) ytPlayer.unMute();
+  } catch { /* optional */ }
+  try {
     ytPlayer.loadVideoById(track.mediaRef);
+  } catch { /* retry via play nudge */ }
+  try {
+    ytPlayer.playVideo();
+  } catch { /* tryPlayYouTube retries */ }
+  tryPlayYouTube();
+  armStreamingWatchdog();
+  requestAnimationFrame(() => {
+    fitYouTube();
     tryPlayYouTube();
-    armStreamingWatchdog();
-  };
-  requestAnimationFrame(() => requestAnimationFrame(run));
+  });
+  // Second nudge after the previous video’s PLAYING state has cleared.
+  window.setTimeout(() => tryPlayYouTube(), 250);
+  window.setTimeout(() => tryPlayYouTube(), 800);
 }
 
 async function playSoundCloud(track) {
@@ -4104,7 +4246,18 @@ function makeYouTubePlayer(mountId, isPrimarySlot) {
             tryPlayYouTube();
           }
           if (event.data === YT.PlayerState.PLAYING) {
-            if (isActivePlayer) pendingYtPlay = false;
+            if (isActivePlayer) {
+              let playingId = "";
+              try {
+                playingId = event.target.getVideoData ? event.target.getVideoData().video_id : "";
+              } catch { /* ignore */ }
+              // Do not clear pending while the previous video is still reporting PLAYING.
+              if (!pendingYtVideo || !playingId || playingId === pendingYtVideo) {
+                pendingYtPlay = false;
+              } else {
+                tryPlayYouTube();
+              }
+            }
             if (!xf.active) finishTrackChange();
             setPlaying(true);
             if (isActivePlayer) applyPendingSeek();
@@ -4149,6 +4302,7 @@ function allowYouTubeFullscreenFor(player) {
   if (!frame || frame.tagName !== "IFRAME") return;
   frame.setAttribute("allowfullscreen", "");
   frame.setAttribute("webkitallowfullscreen", "");
+  frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
   const allow = new Set((frame.getAttribute("allow") || "").split(";").map((part) => part.trim()).filter(Boolean));
   allow.add("fullscreen");
   allow.add("autoplay");
@@ -4763,12 +4917,24 @@ const liquidBlob = {
     this.bound = true;
     const help = document.getElementById("liquid-help");
     if (help) {
+      // Dismiss without click-through: hiding on pointerdown lets the same tap
+      // hit liquid-play underneath and auto-start a song.
+      const armSuppress = () => {
+        this.suppressClick = true;
+        window.setTimeout(() => { this.suppressClick = false; }, 550);
+      };
+      help.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        armSuppress();
+      });
       const dismiss = (event) => {
         event.preventDefault();
         event.stopPropagation();
+        armSuppress();
         this.dismissHelp();
       };
-      help.addEventListener("pointerdown", dismiss);
+      help.addEventListener("pointerup", dismiss);
       help.addEventListener("click", dismiss);
     }
     const aim = (event) => {
