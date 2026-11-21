@@ -199,10 +199,23 @@ def fallback_from_filename(stem, title, artist, hints):
     if len(parts) == 3 and not artist:
         return parts[2] or title, parts[0]
 
-    if len(parts) == 2 and not artist:
+    # Prefer clear "Artist - Title" filenames when tags are missing or are
+    # multi-artist (e.g. Spotlight "Tycho; Sea Lemon") / disagree with the file.
+    if len(parts) == 2:
         left, right = parts
         if len(left) <= 48 and not re.match(r"^\d{2}\s", left):
-            return right or title, left
+            tag = artist or ""
+            multi = ";" in tag or " & " in tag or " feat" in tag.casefold()
+            disagrees = tag and tag.casefold() != left.casefold() and left.casefold() not in tag.casefold()
+            title_ok = (
+                not title
+                or title.casefold() == right.casefold()
+                or title.casefold() == stem.casefold()
+            )
+            if (not tag or multi or disagrees) and title_ok:
+                return right or title, left
+            if not tag:
+                return right or title, left
 
     if (
         hints.get("norah")

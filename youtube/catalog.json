@@ -6,10 +6,22 @@
     "url": "https://www.youtube.com/watch?v=Fr_-tXJfSww"
   },
   {
+    "source": "soundcloud",
+    "title": "All The Photos",
+    "artist": "The Sea And Cake",
+    "url": "https://soundcloud.com/gaga-digi/the-sea-and-cake-all-the-photos"
+  },
+  {
     "videoId": "JHul8vzXsV8",
     "title": "All the Trees of the Field Will Clap Their Hands",
     "artist": "Sufjan Stevens",
     "url": "https://www.youtube.com/watch?v=JHul8vzXsV8"
+  },
+  {
+    "source": "soundcloud",
+    "title": "Any Day",
+    "artist": "The Sea And Cake",
+    "url": "https://soundcloud.com/newmusic2023/the-sea-and-cake-any-day"
   },
   {
     "videoId": "ZgS-EYI5h14",
@@ -30,6 +42,12 @@
     "url": "https://www.youtube.com/watch?v=AiO6e3NTo-4"
   },
   {
+    "source": "soundcloud",
+    "title": "Inn Keeping",
+    "artist": "The Sea And Cake",
+    "url": "https://soundcloud.com/skatehard233/the-sea-and-cake-inn-keeping"
+  },
+  {
     "videoId": "77lwvOQpXoU",
     "title": "It Hurts To See You Go",
     "artist": "Swervedriver",
@@ -46,5 +64,11 @@
     "title": "Up From The Sea",
     "artist": "Swervedriver",
     "url": "https://www.youtube.com/watch?v=dAt53BszxcI"
+  },
+  {
+    "source": "soundcloud",
+    "title": "Weekend",
+    "artist": "The Sea And Cake",
+    "url": "https://soundcloud.com/wantanear/the-sea-and-cake-weekend"
   }
 ]
