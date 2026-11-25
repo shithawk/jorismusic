@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v388";
+const CACHE = "joris-shell-v421";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=256",
+  "/styles.css?v=273",
   "/themes.css",
   "/themes.css?v=166",
   "/app.js",
-  "/app.js?v=215",
+  "/app.js?v=239",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -100,25 +100,28 @@ self.addEventListener("fetch", (event) => {
   }
 
   const request = event.request;
+  // Versioned CSS/JS: prefer network so phone PWAs pick up layout fixes.
   const networkFirst =
-    request.mode === "navigate" ||
-    url.pathname === "/" ||
-    url.pathname === "/index.html" ||
     url.pathname === "/styles.css" ||
     url.pathname === "/themes.css" ||
     url.pathname === "/app.js" ||
-    url.pathname === "/manifest.webmanifest";
+    url.pathname === "/index.html" ||
+    url.pathname === "/";
   event.respondWith((async () => {
     if (networkFirst) {
       const fresh = await refreshShell(request);
       if (fresh) return fresh;
+      const cached = await cachedShell(request);
+      if (cached) return cached;
+      if (request.mode === "navigate") {
+        return (await caches.match("/index.html")) || (await caches.match("/")) || offlineResponse();
+      }
+      return offlineResponse();
     }
     const cached = await cachedShell(request);
     if (cached) return cached;
-    if (!networkFirst) {
-      const fresh = await refreshShell(request);
-      if (fresh) return fresh;
-    }
+    const fresh = await refreshShell(request);
+    if (fresh) return fresh;
     if (request.mode === "navigate") {
       return (await caches.match("/index.html")) || (await caches.match("/")) || offlineResponse();
     }

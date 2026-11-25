@@ -12,6 +12,14 @@
 #   caddy run --config Caddyfile
 :8090 {
 	bind 127.0.0.1
+	handle /music/*.webm {
+		uri strip_prefix /music
+		root * music
+		header Content-Type audio/webm
+		header Cache-Control "no-cache"
+		file_server
+	}
+
 	handle /music/* {
 		uri strip_prefix /music
 		root * music
@@ -45,6 +53,17 @@
 		reverse_proxy https://soundcloud.com {
 			header_up Host soundcloud.com
 		}
+	}
+
+
+	handle /api/soundcloud-v2/* {
+		uri strip_prefix /api/soundcloud-v2
+		reverse_proxy https://api-v2.soundcloud.com {
+			header_up Host api-v2.soundcloud.com
+		}
+	}
+	handle /api/suggest-artists {
+		reverse_proxy 127.0.0.1:8096
 	}
 
 	handle /sw.js {
