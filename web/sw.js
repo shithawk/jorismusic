@@ -1,13 +1,13 @@
-const CACHE = "joris-shell-v421";
+const CACHE = "joris-shell-v430-suggest";
 const SHELL = [
   "/",
   "/index.html",
   "/styles.css",
-  "/styles.css?v=273",
+  "/styles.css?v=278",
   "/themes.css",
-  "/themes.css?v=166",
+  "/themes.css?v=168",
   "/app.js",
-  "/app.js?v=239",
+  "/app.js?v=248",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -30,6 +30,10 @@ const SHELL = [
   "/icon-512-maskable.png?v=jm2"
 ];
 
+self.addEventListener("message", (event) => {
+  if (event && event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())
@@ -50,8 +54,8 @@ function offlineResponse() {
 
 function refreshShell(request) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 4000);
-  return fetch(new Request(request, { cache: "no-cache" }), { signal: controller.signal })
+  const timer = setTimeout(() => controller.abort(), 15000);
+  return fetch(new Request(request, { cache: "no-store" }), { signal: controller.signal })
     .then((response) => {
       if (response && response.ok) {
         const copy = response.clone();

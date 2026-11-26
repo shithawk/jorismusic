@@ -40,6 +40,15 @@
 		file_server
 	}
 
+	# Raw video URL list (phones / debug). App loads /youtube-catalog.json for Videos.
+	handle /videos.txt {
+		rewrite * /videos.txt
+		root * youtube
+		header Cache-Control "no-store"
+		header Content-Type "text/plain; charset=utf-8"
+		file_server
+	}
+
 	handle /api/youtube-oembed {
 		rewrite * /oembed?format=json&{http.request.uri.query}
 		reverse_proxy https://www.youtube.com {
