@@ -1,4 +1,4 @@
-const CACHE = "joris-shell-v430-suggest";
+const CACHE = "joris-shell-v441-formattag";
 const SHELL = [
   "/",
   "/index.html",
@@ -7,7 +7,7 @@ const SHELL = [
   "/themes.css",
   "/themes.css?v=168",
   "/app.js",
-  "/app.js?v=248",
+  "/app.js?v=259",
   "/heroes/jori.jpg",
   "/heroes/joriBW.jpg",
   "/heroes/wayne.jpeg",
@@ -52,15 +52,15 @@ function offlineResponse() {
   return new Response("Offline", { status: 503, statusText: "Offline" });
 }
 
-function refreshShell(request) {
+function refreshShell(request, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
+  // Keep short — Tailscale-off / Mac-unreachable used to stall Android PWA open for 15s+.
+  const timer = setTimeout(() => controller.abort(), timeoutMs == null ? 2500 : timeoutMs);
   return fetch(new Request(request, { cache: "no-store" }), { signal: controller.signal })
     .then((response) => {
-      if (response && response.ok) {
-        const copy = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
-      }
+      if (!response || !response.ok) return null;
+      const copy = response.clone();
+      caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
       return response;
     })
     .catch(() => null)
@@ -113,10 +113,15 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/";
   event.respondWith((async () => {
     if (networkFirst) {
-      const fresh = await refreshShell(request);
-      if (fresh) return fresh;
+      // Cache-first open so Tailscale-off / unreachable Mac still launches the PWA instantly.
+      // Background refresh still picks up new shells when the Mac is reachable.
       const cached = await cachedShell(request);
-      if (cached) return cached;
+      if (cached) {
+        event.waitUntil(refreshShell(request, 4000).then(() => undefined));
+        return cached;
+      }
+      const fresh = await refreshShell(request, 2500);
+      if (fresh) return fresh;
       if (request.mode === "navigate") {
         return (await caches.match("/index.html")) || (await caches.match("/")) || offlineResponse();
       }
@@ -124,7 +129,7 @@ self.addEventListener("fetch", (event) => {
     }
     const cached = await cachedShell(request);
     if (cached) return cached;
-    const fresh = await refreshShell(request);
+    const fresh = await refreshShell(request, 2500);
     if (fresh) return fresh;
     if (request.mode === "navigate") {
       return (await caches.match("/index.html")) || (await caches.match("/")) || offlineResponse();
